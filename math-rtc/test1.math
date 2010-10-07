@@ -1,0 +1,15 @@
+# In square bracket "intrinsic variables" in parenthesis the "parameters".
+# All the variable are floating point real numbers (implicit).
+# in the system the LHS is only formal and provide a "name" for the result
+
+system[p, q] odeex1()
+  p' = -q - p^2,
+  q' = 2*p - q^3
+end
+
+function[x] expnlf(alpha, omega, A)
+  let e = exp(alpha * x)
+  and s = sin(omega * x) in
+  A * e * s
+end
+

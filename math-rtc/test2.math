@@ -1,0 +1,5 @@
+system[x] ff(a, b)
+  y = (a + 12*b*x) * (a - 1)^2/2,
+  z = b*a + x + 3,
+  t = sin(a*x)
+end
