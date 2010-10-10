@@ -3,7 +3,7 @@ CAMLO = ocamlopt
 COMPFLAGS = -g
 LINKFLAGS = -g
 
-IMPL_FILES = lexer.ml variable.ml math.ml exprPrint.ml proto.ml mathParser.ml
+IMPL_FILES = lexer.ml variable.ml math.ml exprPrint.ml proto.ml mathParser.ml testing.ml
 
 INTFC_FILES = variable.mli proto.mli mathParser.mli exprPrint.mli
 

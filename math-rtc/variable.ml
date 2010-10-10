@@ -42,11 +42,13 @@ let rec memi a ls n =
       [] -> None
     | h :: tl -> if h = a then Some n else memi a tl (n-1)
 
+(*
 let string_of_var v =
   match v with
       Global s -> Printf.sprintf "Global(%s)" s
     | Parameter (n,s) -> Printf.sprintf "Param#%i(%s)" n s
     | Argument (n,s) -> Printf.sprintf "Arg#%i(%s)" n s
+*)
 
 let function_symtab_bind symtab params args =
   let bind str id bindings =
@@ -64,7 +66,4 @@ let function_symtab_bind symtab params args =
     in
       (id, var) :: bindings 
   in
-    Hashtbl.iter (fun s i -> Printf.printf "%s: %i\n" s i) symtab;
-    let bs = Hashtbl.fold bind symtab [] in
-      List.iter (fun (i, v) -> Printf.printf "%i: %s\n" i (string_of_var v)) bs;
-      bs
+    Hashtbl.fold bind symtab []

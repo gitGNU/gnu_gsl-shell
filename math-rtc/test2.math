@@ -3,3 +3,7 @@ system[x] ff(a, b)
   z = b*a + x + 3,
   t = sin(a*x)
 end
+
+system[x] expnlf(alpha, omega, A)
+  y = A * exp(alpha * x) * sin(omega * x) 
+end
