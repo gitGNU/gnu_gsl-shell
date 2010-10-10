@@ -1,5 +1,5 @@
 {
-  open Parser        (* The type token is defined in parser.mli *)
+  open MathParser        (* The type token is defined in parser.mli *)
   exception Eof
 
   let keyword_table = Hashtbl.create 16

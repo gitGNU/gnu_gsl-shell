@@ -1,6 +1,10 @@
 %{
 open Math
-open Proto
+open Variable
+
+let globals = Variable.create_symtab ()
+let symtab = ref globals
+
 %}
 
 %token <string> NUMBER
@@ -17,7 +21,7 @@ open Proto
 %%
 
 expr:
-   IDENT                      { Var(Var.get_var $1) }
+   IDENT                      { Var(Variable.lookup_id !symtab $1) }
  | NUMBER                     { Const(Num.num_of_string $1) }
  | LPAREN expr RPAREN         { $2 }
  | expr PLUS expr             { build_sum $1 $3 }
@@ -52,10 +56,19 @@ normeqns:
 ;
 
 system:
-   SYSTEM SQLPAREN csids SQRPAREN proto normeqns END { {iparam= $3; proto= $5; equations= $6} }
+   SYSTEM SQLPAREN csids SQRPAREN proto normeqns END { 
+     print_string "BINDING\n";
+     let name, args = $5 in
+     let st = !symtab in
+     let bindings = Variable.function_symtab_bind st.map $3 args in
+       symtab := Variable.create_symtab ();
+       {Proto.name= name; 
+	Proto.symtab= st; 
+	Proto.bindings= bindings; 
+	Proto.equations= $6}
+   }
 ;
    
-
 defs:
     system                { $1 :: [] }
   | defs system           { $2 :: $1 }

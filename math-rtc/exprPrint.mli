@@ -1,2 +1,2 @@
 
-val print: Math.expr -> string
+val print: Variable.symbol_table -> Math.expr -> string

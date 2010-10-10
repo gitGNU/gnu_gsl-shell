@@ -1,5 +1,4 @@
 open Num
-open Var
 
 exception Indeterminate_expr
 exception Division_by_zero
@@ -12,7 +11,7 @@ type 'a mon = 'a * (expr * int) list and
      function_call = function_ref * expr list and
      expr =
        Const of num
-     | Var of variable
+     | Var of int
      | Power of binary
      | Fraction of binary
      | Sum of num poly

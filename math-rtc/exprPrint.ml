@@ -28,13 +28,13 @@ let print_list printfun printsep ls =
     printfun e; false in
   let _ = List.fold_left f true ls in ()
 
-let rec print_mon signed buffer (f, lett) =
+let rec print_mon ctx signed buffer (f, lett) =
   let fs buf (b, e) =
     if e = 1 then
-      print_expr buffer 20 b
+      print_expr ctx buffer 20 b
     else
       begin
-	print_expr buffer 100 b;
+	print_expr ctx buffer 100 b;
 	bprintf buffer "^%i" e
       end in
   let is_neg = f < zero in
@@ -46,12 +46,12 @@ let rec print_mon signed buffer (f, lett) =
   if f' <> unity then bprintf buffer "%s " (Num.string_of_num f');
   mprint_list buffer fs " " lett;
   if debug_on then Buffer.add_char buffer ']'
-and print_poly buffer (noto, term) =
+and print_poly ctx buffer (noto, term) =
   begin
     match term with
       x :: tail ->
-	print_mon false buffer x;
-	mprint_list buffer (print_mon true) "" tail
+	print_mon ctx false buffer x;
+	mprint_list buffer (print_mon ctx true) "" tail
     | [] -> ()
   end;
   if noto < zero then
@@ -59,30 +59,30 @@ and print_poly buffer (noto, term) =
     bprintf buffer " - %s" (Num.string_of_num n')
   else
     if noto > zero then bprintf buffer " + %s" (Num.string_of_num noto)
-and print_binary buffer prio simbolo (a, b) =
-  print_expr buffer prio a;
+and print_binary ctx buffer prio simbolo (a, b) =
+  print_expr ctx buffer prio a;
   Buffer.add_string buffer simbolo;
-  print_expr buffer prio b
-and print_call buf f args =
+  print_expr ctx buffer prio b
+and print_call ctx buf f args =
   Buffer.add_string buf f;
   Buffer.add_char buf '(';
-  print_list (fun ex -> print_expr buf 0 ex) (fun () -> Buffer.add_string buf ", ") args;
+  print_list (fun ex -> print_expr ctx buf 0 ex) (fun () -> Buffer.add_string buf ", ") args;
   Buffer.add_char buf ')'
-and print_expr buffer prio e =
+and print_expr ctx buffer prio e =
   let parziale = Buffer.create 64 in
   let this_prio =
     match e with
       Const c -> bprintf buffer "%s" (Num.string_of_num c); 1000
-    | Var v -> bprintf buffer "%s" (Var.retrieve_name v); 1000
-    | Power (a, b) -> print_binary parziale 100 "^" (a, b); 100
-    | Sum s -> print_poly parziale s; 10
-    | Product p -> print_mon false parziale p; 20
-    | Fraction (a, b) -> print_binary parziale 30 "/" (a, b); 30
-    | Call (f, args) -> print_call parziale f args; 200
+    | Var n -> bprintf buffer "%s" (Variable.lookup_name ctx n); 1000
+    | Power (a, b) -> print_binary ctx parziale 100 "^" (a, b); 100
+    | Sum s -> print_poly ctx parziale s; 10
+    | Product p -> print_mon ctx false parziale p; 20
+    | Fraction (a, b) -> print_binary ctx parziale 30 "/" (a, b); 30
+    | Call (f, args) -> print_call ctx parziale f args; 200
   in
   with_brackets buffer (prio >= this_prio) parziale
 
-let print ex =
+let print ctx ex =
   let buf = Buffer.create 128 in
-  print_expr buf 0 ex;
+  print_expr ctx buf 0 ex;
   Buffer.contents buf
