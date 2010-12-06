@@ -6,6 +6,10 @@
 #include "disp-table.h"
 #include "disp-library.h"
 
+#include "matrix.h"
+#include "cmatrix.h"
+#include "elliss.h"
+
 #define check_disp(L, idx) (struct disp *) luaL_checkudata (L, (idx), disp_mt_name)
 
 extern int  luaopen_disp             (lua_State *L);
@@ -25,6 +29,8 @@ static int  get_sample               (lua_State *L);
 static int  get_sample_raw           (lua_State *L, struct disp *d, 
 				      struct sampling_intfc *intfc,
 				      lua_Integer index);
+
+static int  lua_mult_se_ab           (lua_State *L);
 
 
 static struct disp_ho * ho_builder_rec (lua_State *L, int nb_osc);
@@ -47,8 +53,9 @@ static const struct luaL_Reg disp_methods[] = {
 };
 
 static const struct luaL_Reg disp_functions[] = {
-  {"ho",      ho_builder},
-  {"load_nk", lua_load_nk},
+  {"ho",        ho_builder},
+  {"load_nk",   lua_load_nk},
+  {"se_ab",     lua_mult_se_ab},
   {NULL, NULL}
 };
 
@@ -329,6 +336,53 @@ get_sample (lua_State *L)
   index = luaL_checkinteger (L, 2);
 
   return get_sample_raw (L, d, DISP(d)->sampling_intfc, index);
+}
+
+int
+lua_mult_se_ab (lua_State *L)
+{
+  gsl_matrix_complex *ns_m = matrix_complex_check (L, 1);
+  gsl_matrix *ths_m = matrix_check (L, 2);
+  double lambda = luaL_checknumber (L, 3);
+  double phi0 = luaL_checknumber (L, 4), anlz = luaL_checknumber (L, 5);
+  cmpl *ns;
+  double *ths;
+  double *buffer;
+  ell_ab_t e;
+  size_t nb = ns_m->size1;
+  size_t j;
+
+  if (nb <= 2)
+    luaL_error (L, "at least one layer is required");
+
+  buffer = malloc( (2*nb + (nb-2)) * sizeof(double));
+  if (buffer == 0)
+    luaL_error (L, "not enough memory");
+
+  ns = (cmpl *) buffer;
+  ths = buffer + 2*nb;
+
+  for (j = 0; j < nb; j++)
+    {
+      gsl_complex *zp = gsl_matrix_complex_ptr (ns_m, j, 0);
+      ns[j] = *((cmpl *) zp);
+    }
+
+  for (j = 0; j < nb-2; j++)
+    ths[j] = gsl_matrix_get (ths_m, j, 0);
+
+  if (! mult_layer_se_jacob (SE_ALPHA_BETA, nb, ns, phi0, ths, lambda, anlz, e,
+			     NULL, NULL))
+    {
+      free (buffer);
+      return luaL_error (L, "error in mult_layer_se");
+    }
+
+  free (buffer);
+
+  lua_pushnumber (L, e->alpha);
+  lua_pushnumber (L, e->beta);
+  return 2;
 }
 
 int
