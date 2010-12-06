@@ -35,14 +35,14 @@ endif
 LUA_CFLAGS  = -I$(LUADIR)/src
 LUA_AR_LIBS = $(LUADIR)/src/liblua.a
 
-INCLUDES += -I$(LUADIR)/src -I$(LUADIR)/etc
+INCLUDES += -I../.. -I$(LUADIR)/src -I$(LUADIR)/etc
 
 ifeq ($(PLATFORM), mingw)
 CFLAGS += -I/usr/include
 LIBS += -L/usr/lib
 endif
 
-DISP_SRC_FILES = vector_float.c disp-utils.c data-table.c dispers.c disp-ho.c disp-library.c disp-table.c lua-disp.c
+DISP_SRC_FILES = vector_float.c disp-utils.c data-table.c dispers.c disp-ho.c disp-library.c disp-table.c elliss.c lua-disp.c
 
 DISP_OBJ_FILES := $(DISP_SRC_FILES:%.c=%.o)
 DEP_FILES      := $(DISP_SRC_FILES:%.c=.deps/%.P)
@@ -65,7 +65,7 @@ all: $(TARGETS)
 ifeq ($(PLATFORM), mingw)
 
 disp.dll: $(DISP_OBJ_FILES) $(LUA_AR_LIBS)
-	$(CC) -O -shared -Wl,--enable-auto-import -o $@ $(DISP_OBJ_FILES) $(LUA_AR_LIBS) $(LIBS)
+	$(CC) -O -shared -Wl,--enable-auto-import -o $@ -L../.. -lluagsl $(DISP_OBJ_FILES) $(LUA_AR_LIBS) $(LIBS)
 
 else
 
