@@ -69,9 +69,8 @@ disp.dll: $(DISP_OBJ_FILES) $(LUA_AR_LIBS)
 
 else
 
-disp.so: $(DISP_OBJ_FILES)  $(LUA_AR_LIBS)
-	$(CC) -shared -o .libs/libluadisp.so $(DISP_OBJ_FILES) $(LUA_AR_LIBS) $(LIBS)
-	ln -sf ./.libs/libluadisp.so $@
+disp.so: $(DISP_OBJ_FILES) $(LUA_AR_LIBS)
+	$(CC) -shared -o $@ $(DISP_OBJ_FILES) $(LUA_AR_LIBS) -L$(GSH_BASE_DIR) -lgslshell $(LIBS)
 
 endif
 

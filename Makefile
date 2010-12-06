@@ -62,7 +62,7 @@ C_SRC_FILES = common.c gs-types.c matrix.c matrix_arith.c nlinfit_helper.c \
 		nlinfit.c lua-utils.c linalg.c \
 		integ.c ode_solver.c ode.c random.c randist.c \
 		pdf.c cdf.c sf.c fmultimin.c gradcheck.c fdfmultimin.c \
-                multimin.c eigen-systems.c mlinear.c bspline.c interp.c \
+		multimin.c eigen-systems.c mlinear.c bspline.c interp.c \
 		lua-gsl.c gsl-shell-hooks.c
 
 ifeq ($(strip $(BUILD_LUA_DLL)), yes)
@@ -128,8 +128,11 @@ gsl.dll: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
 	$(CC) -O -shared -Wl,--enable-auto-import -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
 else
 
-gsl-shell: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
-	$(CC) -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS) -Wl,-E -ldl -lreadline -lhistory -lncurses
+libgslshell.so: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
+	$(CC) -shared -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
+
+gsl-shell: gsl-shell.o libgslshell.so
+	$(CC) -o $@ gsl-shell.o $(LUAGSL_LIBS) -L. -lgslshell $(LIBS) -Wl,-E -ldl -lreadline -lhistory -lncurses
 
 gsl.so: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
 	$(CC) -shared -o .libs/libluagsl.so $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
