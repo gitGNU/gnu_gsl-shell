@@ -54,7 +54,7 @@ else
   PTHREADS_LIBS = -lpthread
 endif
 
-SUBDIRS = lua
+SUBDIRS = lua packages/optical-disp
 
 LUAGSL_LIBS = $(LUADIR)/src/liblua.a 
 
@@ -63,14 +63,14 @@ C_SRC_FILES = common.c gs-types.c matrix.c matrix_arith.c nlinfit_helper.c \
 		integ.c ode_solver.c ode.c random.c randist.c \
 		pdf.c cdf.c sf.c fmultimin.c gradcheck.c fdfmultimin.c \
                 multimin.c eigen-systems.c mlinear.c bspline.c interp.c \
-		lua-gsl.c
+		lua-gsl.c gsl-shell-hooks.c
 
 ifeq ($(strip $(BUILD_LUA_DLL)), yes)
   CFLAGS += -fpic
   DEFS += -DLUA_MODULE -DUSE_SEPARATE_NAMESPACE
   TARGETS = $(LUA_DLL)
 else
-  C_SRC_FILES += gsl-shell.c
+#  C_SRC_FILES += gsl-shell.c
   SUBDIRS_DEFS += -DGSL_SHELL_LUA -DLUA_ROOT=$(PREFIX)
   TARGETS = $(GSL_SHELL)
 endif
@@ -114,8 +114,11 @@ all: $(SUBDIRS) $(TARGETS)
 
 ifeq ($(PLATFORM), mingw)
 
-gsl-shell.exe: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
-	$(CC) -Wl,--enable-auto-import -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
+luagsl.dll: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
+	$(CC) -O -shared -Wl,--enable-auto-import -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
+
+gsl-shell.exe: gsl-shell.o luagsl.dll
+	$(CC) -Wl,--enable-auto-import -o $@ gsl-shell.o lua/src/liblua.a -L. -lluagsl $(LIBS)
 
 luagsl.a: $(LUAGSL_OBJ_FILES)
 	$(AR) $@ $?

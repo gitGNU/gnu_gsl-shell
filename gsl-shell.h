@@ -10,6 +10,7 @@ __BEGIN_DECLS
 
 extern int  error_report (lua_State *L, int status);
 extern void gsl_shell_unref_plot (int id);
+extern void do_windows_unref (lua_State *L);
 
 extern pthread_mutex_t gsl_shell_mutex[1];
 

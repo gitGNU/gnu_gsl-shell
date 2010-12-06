@@ -35,7 +35,7 @@ __BEGIN_DECLS
 
 #define CSQABS(z) (creal(z)*creal(z) + cimag(z)*cimag(z))
 
-typedef double complex cmpl;
+typedef double _Complex cmpl;
 
 __END_DECLS
 
