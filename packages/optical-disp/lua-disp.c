@@ -345,9 +345,6 @@ lua_mult_se_ab (lua_State *L)
   gsl_matrix *ths_m = matrix_check (L, 2);
   double lambda = luaL_checknumber (L, 3);
   double phi0 = luaL_checknumber (L, 4), anlz = luaL_checknumber (L, 5);
-  cmpl *ns;
-  double *ths;
-  double *buffer;
   ell_ab_t e;
   size_t nb = ns_m->size1;
   size_t j;
@@ -355,30 +352,19 @@ lua_mult_se_ab (lua_State *L)
   if (nb <= 2)
     luaL_error (L, "at least one layer is required");
 
-  buffer = malloc( (2*nb + (nb-2)) * sizeof(double));
-  if (buffer == 0)
-    luaL_error (L, "not enough memory");
+  if (ns_m->size2 > 1 || ths_m->size2 > 1)
+    return luaL_error (L, "first and second argument should be column matrices");
 
-  ns = (cmpl *) buffer;
-  ths = buffer + 2*nb;
+  if (ns_m->size1 != ths_m->size1 + 2)
+    return luaL_error (L, "the thickness vector should have a number of"
+		       " elements equal to those of the n vector minus two");
 
-  for (j = 0; j < nb; j++)
-    {
-      gsl_complex *zp = gsl_matrix_complex_ptr (ns_m, j, 0);
-      ns[j] = *((cmpl *) zp);
-    }
-
-  for (j = 0; j < nb-2; j++)
-    ths[j] = gsl_matrix_get (ths_m, j, 0);
-
-  if (! mult_layer_se_jacob (SE_ALPHA_BETA, nb, ns, phi0, ths, lambda, anlz, e,
+  if (! mult_layer_se_jacob (SE_ALPHA_BETA, nb, ns_m->data, ns_m->tda, 
+			     phi0, ths_m->data, ths_m->tda, lambda, anlz, e,
 			     NULL, NULL))
     {
-      free (buffer);
       return luaL_error (L, "error in mult_layer_se");
     }
-
-  free (buffer);
 
   lua_pushnumber (L, e->alpha);
   lua_pushnumber (L, e->beta);

@@ -28,8 +28,8 @@ typedef struct elliss_ab *ell_ab_ptr;
 
 extern int
 mult_layer_se_jacob (enum se_type type,
-		     size_t nb, const cmpl ns[], double phi0, 
-		     const double ds[], double lambda,
+		     size_t nb, const cmpl ns[], int ns_stride, double phi0, 
+		     const double ds[], int ds_stride, double lambda,
 		     double anlz, ell_ab_t e,
 		     gsl_vector *jacob_th, gsl_vector_complex *jacob_n);
 

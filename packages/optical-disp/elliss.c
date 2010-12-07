@@ -58,42 +58,49 @@ snell_cos (cmpl nsin0, cmpl nlyr)
 }
 
 static void
-mult_layer_refl (int nb, const cmpl ns[], cmpl nsin0, 
-		 const double ds[], double lambda, cmpl R[])
+mult_layer_refl (int nb, const cmpl ns[], int ns_stride, cmpl nsin0, 
+		 const double ds[], int ds_stride, double lambda, cmpl R[])
 {
   const double omega = 2 * M_PI / lambda;
   cmpl cosc, cost;
   const cmpl *nptr;
+  cmpl n0, n1;
   int j;
 
   /* In this procedure we assume (nb > 2). This condition should be
      ensured in advance. */
 
-  nptr = ns + (nb-2);
+  nptr = ns + (nb-2) * ns_stride;
 
-  cost = snell_cos (nsin0, nptr[0]);
-  cosc = snell_cos (nsin0, nptr[1]);
+  n0 = *nptr;
+  n1 = *(nptr + ns_stride);
 
-  R[0] = refl_coeff (nptr[0], cost, nptr[1], cosc, POL_S);
-  R[1] = refl_coeff (nptr[0], cost, nptr[1], cosc, POL_P);
+  cost = snell_cos (nsin0, n0);
+  cosc = snell_cos (nsin0, n1);
+
+  R[0] = refl_coeff (n0, cost, n1, cosc, POL_S);
+  R[1] = refl_coeff (n0, cost, n1, cosc, POL_P);
 
   for (j = nb - 3; j >= 0; j--)
     {
       cmpl r[2], rho, beta;
-      double th = ds[j];
+      double th = *(ds + j * ds_stride);
       polar_t p;
 
-      nptr --;
+      nptr -= ns_stride;
 
+      n0 = *nptr;
+      n1 = *(nptr + ns_stride);
+ 
       cosc = cost;
-      cost = snell_cos (nsin0, nptr[0]);
+      cost = snell_cos (nsin0, n0);
 
-      beta = - 2.0 * I * omega * nptr[1] * cosc;
+      beta = - 2.0 * I * omega * n1 * cosc;
       rho = cexp(beta * th);
 
       for (p = 0; p <= 1; p++)
 	{
-	  r[p] = refl_coeff (nptr[0], cost, nptr[1], cosc, p);
+	  r[p] = refl_coeff (n0, cost, n1, cosc, p);
 
 	  R[p] = (r[p] + R[p] * rho) / (1 + r[p] * R[p] * rho);
       }
@@ -101,40 +108,47 @@ mult_layer_refl (int nb, const cmpl ns[], cmpl nsin0,
 }
 
 static void
-mult_layer_refl_jacob_th (int nb, const cmpl ns[], cmpl nsin0, 
-			  const double ds[], double lambda, cmpl R[],
-			  cmpl *jacth)
+mult_layer_refl_jacob_th (int nb, const cmpl ns[], int ns_stride, cmpl nsin0, 
+			  const double ds[], int ds_stride, double lambda, 
+			  cmpl R[], cmpl *jacth)
 {
   const double omega = 2 * M_PI / lambda;
   const int nblyr = nb - 2;
   cmpl cosc, cost;
-  const cmpl *nptr;
+  const cmpl *nptr; 
+  cmpl n0, n1;
   int j;
 
   /* In this procedure we assume (nb > 2). This condition should be
      ensured in advance. */
 
-  nptr = ns + (nb-2);
+  nptr = ns + (nb-2) * ns_stride;
 
-  cost = snell_cos (nsin0, nptr[0]);
-  cosc = snell_cos (nsin0, nptr[1]);
+  n0 = *nptr;
+  n1 = *(nptr + ns_stride);
 
-  R[0] = refl_coeff (nptr[0], cost, nptr[1], cosc, POL_S);
-  R[1] = refl_coeff (nptr[0], cost, nptr[1], cosc, POL_P);
+  cost = snell_cos (nsin0, n0);
+  cosc = snell_cos (nsin0, n1);
+
+  R[0] = refl_coeff (n0, cost, n1, cosc, POL_S);
+  R[1] = refl_coeff (n0, cost, n1, cosc, POL_P);
 
   for (j = nb - 3; j >= 0; j--)
     {
       cmpl r[2], rho, beta, drhodth;
-      double th = ds[j];
+      double th = *(ds + j * ds_stride);
       polar_t p;
       int k;
 
-      nptr --;
+      nptr -= ns_stride;
+
+      n0 = *nptr;
+      n1 = *(nptr + ns_stride);
 
       cosc = cost;
-      cost = snell_cos (nsin0, nptr[0]);
+      cost = snell_cos (nsin0, n0);
 
-      beta = - 2.0 * I * omega * nptr[1] * cosc;
+      beta = - 2.0 * I * omega * n1 * cosc;
       rho = cexp(beta * th);
       drhodth = rho * beta;
 
@@ -144,7 +158,7 @@ mult_layer_refl_jacob_th (int nb, const cmpl ns[], cmpl nsin0,
 	  cmpl *pjacth = jacth + (p == 0 ? 0 : nblyr);
 	  cmpl den, isqden;
 
-	  r[p] = refl_coeff (nptr[0], cost, nptr[1], cosc, p);
+	  r[p] = refl_coeff (n0, cost, n1, cosc, p);
 
 	  den = 1 + r[p] * R[p] * rho;
 	  isqden = 1 / csqr(den);
@@ -163,8 +177,10 @@ mult_layer_refl_jacob_th (int nb, const cmpl ns[], cmpl nsin0,
 }
 
 static void
-mult_layer_refl_jacob (int nb, const cmpl ns[], cmpl nsin0, 
-		       const double ds[], double lambda, cmpl R[],
+mult_layer_refl_jacob (int nb, 
+		       const cmpl ns[], int ns_stride, cmpl nsin0, 
+		       const double ds[], int ds_stride, 
+		       double lambda, cmpl R[],
 		       cmpl *jacth, cmpl *jacn)
 {
   const double omega = 2 * M_PI / lambda;
@@ -172,20 +188,22 @@ mult_layer_refl_jacob (int nb, const cmpl ns[], cmpl nsin0,
   cmpl cosc, cost;
   const cmpl *nptr;
   cmpl drdnt[2], drdnb[2];
+  cmpl n0, n1;
   int j;
 
   /* In this procedure we assume (nb > 2). This condition should be
      ensured in advance. */
 
-  nptr = ns + (nb-2);
+  nptr = ns + (nb-2) * ns_stride;
 
-  cost = snell_cos (nsin0, nptr[0]);
-  cosc = snell_cos (nsin0, nptr[1]);
+  n0 = *nptr;
+  n1 = *(nptr + ns_stride);
 
-  R[0] = refl_coeff_ext (nptr[0], cost, nptr[1], cosc, 
-			 &drdnt[0], &drdnb[0], POL_S);
-  R[1] = refl_coeff_ext (nptr[0], cost, nptr[1], cosc,
-			 &drdnt[1], &drdnb[1], POL_P);
+  cost = snell_cos (nsin0, n0);
+  cosc = snell_cos (nsin0, n1);
+
+  R[0] = refl_coeff_ext (n0, cost, n1, cosc, &drdnt[0], &drdnb[0], POL_S);
+  R[1] = refl_coeff_ext (n0, cost, n1, cosc, &drdnt[1], &drdnb[1], POL_P);
 
   jacn[nb-1]      = drdnb[0];
   jacn[nb + nb-1] = drdnb[1];
@@ -196,16 +214,19 @@ mult_layer_refl_jacob (int nb, const cmpl ns[], cmpl nsin0,
   for (j = nb - 3; j >= 0; j--)
     {
       cmpl r[2], rho, beta, drhodn, drhodth;
-      double th = ds[j];
+      double th = *(ds + j * ds_stride);
       polar_t p;
       int k;
 
-      nptr --;
+      nptr -= ns_stride;
+
+      n0 = *nptr;
+      n1 = *(nptr + ns_stride);
 
       cosc = cost;
-      cost = snell_cos (nsin0, nptr[0]);
+      cost = snell_cos (nsin0, n0);
 
-      beta = - 2.0 * I * omega * nptr[1] * cosc;
+      beta = - 2.0 * I * omega * n1 * cosc;
       rho = cexp(beta * th);
       drhodth = rho * beta;
       drhodn = - 2.0 * I * rho * omega * th / cosc;
@@ -217,8 +238,7 @@ mult_layer_refl_jacob (int nb, const cmpl ns[], cmpl nsin0,
 	  cmpl *pjacth = jacth + (p == 0 ? 0 : nblyr);
 	  cmpl den, isqden;
 
-	  r[p] = refl_coeff_ext (nptr[0], cost, nptr[1], cosc,
-				 &drdnt[p], &drdnb[p], p);
+	  r[p] = refl_coeff_ext (n0, cost, n1, cosc, &drdnt[p], &drdnb[p], p);
 
 	  den = 1 + r[p] * R[p] * rho;
 	  isqden = 1 / csqr(den);
@@ -242,50 +262,6 @@ mult_layer_refl_jacob (int nb, const cmpl ns[], cmpl nsin0,
       }
     }
 }
-
-#if 0
-static void
-multlayer_refl_na (int nb, const cmpl ns[], cmpl nsin0, 
-		   const double ds[], double lambda, cmpl R[],
-		   double numap)
-{
-  const int ndiv = 16;
-  double phi0 = asin (creal(nsin0 / ns[0])); // should be real
-  double dphi = asin (numap);
-  double xr[3];
-  int j;
-
-  R[0] = R[1] = 0.0i;
-
-  xr[2] = -1.0;
-  for (j = -ndiv/2 + 1; j <= ndiv/2; j++)
-    {
-      double dxr;
-      int k, klim;
-
-      xr[0] = xr[2];
-      xr[2] = sin(2 * j * M_PI_2 / ndiv);
-      xr[1] = (xr[0] + xr[2]) / 2;
-
-      dxr = xr[2] - xr[0];
-
-      klim = (j == ndiv/2 ? 2 : 3);
-
-      for (k = 1; k < klim; k++)
-	{
-	  const int sc[3] = {1, 4, 2};
-	  cmpl nsin0x = ns[0] * sin(phi0 + dphi * xr[k]);
-	  double rf = sqrt(1 - xr[k] * xr[k]);
-	  cmpl Rx[2];
-      
-	  mult_layer_refl (nb, ns, nsin0x, ds, lambda, Rx);
-
-	  R[0] += rf * sc[k] * dxr * Rx[0] / (6 * M_PI_2);
-	  R[1] += rf * sc[k] * dxr * Rx[1] / (6 * M_PI_2);
-	}
-    }
-}
-#endif
 
 /* NB: In this case we are treating a Psi-Delta spectrum and
    the fields named alpha and beta corresponds actually to
@@ -343,8 +319,8 @@ se_ab_der (cmpl R[], cmpl dR[], double tanlz, cmpl *dalpha, cmpl *dbeta)
 
 int
 mult_layer_se_jacob (enum se_type type, size_t _nb,
-		     const cmpl *ns, double phi0, 
-		     const double *ds, double lambda,
+		     const cmpl *ns, int ns_stride, double phi0, 
+		     const double *ds, int ds_stride, double lambda,
 		     double anlz, ell_ab_t e,
 		     gsl_vector *jacob_th, gsl_vector_complex *jacob_n)
 {
@@ -375,11 +351,13 @@ mult_layer_se_jacob (enum se_type type, size_t _nb,
   nsin0 = ns[0] * csin ((cmpl) phi0);
 
   if (jacob_th && jacob_n)
-    mult_layer_refl_jacob (nb, ns, nsin0, ds, lambda, R, jac.th, jac.n);
+    mult_layer_refl_jacob (nb, ns, ns_stride, nsin0, ds, ds_stride, lambda, 
+			   R, jac.th, jac.n);
   else if (jacob_th)
-    mult_layer_refl_jacob_th (nb, ns, nsin0, ds, lambda, R, jac.th);
+    mult_layer_refl_jacob_th (nb, ns, ns_stride, nsin0, ds, ds_stride, lambda, 
+			      R, jac.th);
   else
-    mult_layer_refl (nb, ns, nsin0, ds, lambda, R);
+    mult_layer_refl (nb, ns, ns_stride, nsin0, ds, ds_stride, lambda, R);
 
   if (type == SE_ALPHA_BETA)
     se_ab (R, tanlz, e);
