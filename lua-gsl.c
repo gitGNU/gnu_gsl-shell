@@ -57,6 +57,8 @@
 
 static const struct luaL_Reg gsl_methods_dummy[] = {{NULL, NULL}};
 
+extern int opcode_register (lua_State *L);
+
 int
 luaopen_gsl (lua_State *L)
 {
@@ -97,6 +99,8 @@ luaopen_gsl (lua_State *L)
   window_register (L);
   plot_register (L);
 #endif
+
+  opcode_register (L);
 
 #ifdef LNUM_COMPLEX
   lua_pushboolean (L, 1);
