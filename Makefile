@@ -63,7 +63,9 @@ C_SRC_FILES = common.c gs-types.c matrix.c matrix_arith.c nlinfit_helper.c \
 		integ.c ode_solver.c ode.c random.c randist.c \
 		pdf.c cdf.c sf.c fmultimin.c gradcheck.c fdfmultimin.c \
                 multimin.c eigen-systems.c mlinear.c bspline.c interp.c \
-		lua-gsl.c
+		opcode.c lua-gsl.c
+
+CXX_SRC_FILES = mem-segment.cpp
 
 ifeq ($(strip $(BUILD_LUA_DLL)), yes)
   CFLAGS += -fpic
@@ -97,7 +99,7 @@ ifeq ($(strip $(ENABLE_COMPLEX)), yes)
 endif
 
 COMPILE = $(CC) --std=c99 $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
-CXXCOMPILE = $(CXX) $(CXXFLAGS) -c
+CXXCOMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
 
 LUAGSL_OBJ_FILES = $(C_SRC_FILES:%.c=%.o) $(CXX_SRC_FILES:%.cpp=%.o)
 

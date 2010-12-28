@@ -2,8 +2,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 
-#define __USE_MISC
-#include <sys/mman.h>
+#include "mem-segment.h"
 
 #define CODE_SEGMENT_SIZE 2048
 #define CONST_SEGMENT_SIZE 2048
@@ -48,9 +47,7 @@ opcode_new (lua_State *L)
   unsigned int sz = CODE_SEGMENT_SIZE + CONST_SEGMENT_SIZE;
 
   struct opcode *opc = lua_newuserdata (L, sizeof(struct opcode));
-  opc->segment = mmap(0, sz, 
-		      PROT_EXEC | PROT_READ | PROT_WRITE,
-		      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  opc->segment = mem_segment_alloc(sz);
 
   opc->nargs = nargs;
   opc->code_segment  = opc->segment;
