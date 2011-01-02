@@ -76,8 +76,8 @@ function string_tokens(this)
 
       elseif match '%d' then
 	 add_match '%d+'
-	 add_match '.%d+'
-	 add_match 'eE[+-]?%d+'
+--	 add_match '\.%d+'
+--	 add_match '[eE][+-]?%d+'
 
 -- Make sure the next character is not a letter.
 
