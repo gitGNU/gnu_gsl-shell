@@ -21,6 +21,9 @@
 #define NLINFIT_MAX_ITER 30
 
 static int  FUNCTION (matrix, get)               (lua_State *L);
+static int  FUNCTION (matrix, index)             (lua_State *L);
+static int  FUNCTION (matrix, newindex)          (lua_State *L);
+static int  FUNCTION (matrix, len)               (lua_State *L);
 static int  FUNCTION (matrix, set)               (lua_State *L);
 static int  FUNCTION (matrix, free)              (lua_State *L);
 static int  FUNCTION (matrix, new)               (lua_State *L);
@@ -28,13 +31,18 @@ static int  FUNCTION (matrix, slice)             (lua_State *L);
 
 static void FUNCTION (matrix, set_ref)           (lua_State *L, int index);
 
-static const struct luaL_Reg FUNCTION (matrix, methods)[] = {
+static const struct luaL_Reg FUNCTION (matrix, meta_methods)[] = {
   {"__add",         matrix_add},
   {"__sub",         matrix_sub},
   {"__mul",         matrix_mul_elements},
   {"__div",         matrix_div_elements},
   {"__unm",         matrix_unm},
+  {"__len",         FUNCTION (matrix, len)},
   {"__gc",          FUNCTION (matrix, free)},
+  {NULL, NULL}
+};
+
+static const struct luaL_Reg FUNCTION (matrix, methods)[] = {
   {"get",           FUNCTION (matrix, get)},
   {"set",           FUNCTION (matrix, set)},
   {"slice",         FUNCTION (matrix, slice)},
