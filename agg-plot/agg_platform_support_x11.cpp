@@ -481,18 +481,12 @@ namespace agg
   bool platform_support::init(unsigned width, unsigned height, unsigned flags)
   {
     m_window_flags = flags;
-
-    if (!m_specific->m_main_conn.init())
-      return false;
-
-    if (!m_specific->m_draw_conn.init())
-      {
-        m_specific->close_connections();
-        return false;
-      }
         
     x_connection *xc = &m_specific->m_main_conn;
     x_connection *dc = &m_specific->m_draw_conn;
+
+    if (!xc->init() || !dc->init())
+      goto close;
 
     unsigned long r_mask = xc->visual->red_mask;
     unsigned long g_mask = xc->visual->green_mask;
@@ -503,8 +497,7 @@ namespace agg
         fprintf(stderr,
                 "There's no Visual compatible with minimal AGG requirements:\n"
                 "At least 15-bit color depth and True- or DirectColor class.\n\n");
-        m_specific->close_connections();
-        return false;
+	goto close;
       }
         
     int t = 1;
@@ -594,9 +587,7 @@ namespace agg
                 "RGB masks are not compatible with AGG pixel formats:\n"
                 "R=%08x, R=%08x, B=%08x\n", 
                 (unsigned)r_mask, (unsigned)g_mask, (unsigned)b_mask);
-
-        m_specific->close_connections();
-        return false;
+	goto close;
       }
 
     gslshell::sys_pixel_format = m_specific->m_sys_format;
@@ -627,8 +618,7 @@ namespace agg
       {
         XFreeGC(xc->display, m_specific->m_gc);
         XDestroyWindow(xc->display, m_specific->m_window);
-        m_specific->close_connections();
-        return false;
+	goto close;
       }
        
     m_specific->m_main_img->attach(m_rbuf_window, m_flip_y);
@@ -683,6 +673,10 @@ namespace agg
     XSetWMProtocols(xc->display, m_specific->m_window, &m_specific->m_close_atom, 1);
 
     return true;
+
+  close:
+    m_specific->close_connections();
+    return false;
   }
 
   //------------------------------------------------------------------------
