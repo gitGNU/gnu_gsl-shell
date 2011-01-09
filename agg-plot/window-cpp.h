@@ -1,3 +1,5 @@
+#ifndef WINDOW_CPP_H
+#define WINDOW_CPP_H
 
 extern "C" {
 #include "lua.h"
@@ -89,3 +91,5 @@ public:
   virtual void on_draw();
   virtual void on_resize(int sx, int sy);
 };
+
+#endif

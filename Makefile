@@ -54,7 +54,7 @@ else
   PTHREADS_LIBS = -lpthread
 endif
 
-SUBDIRS = lua
+SUBDIRS = lua tinygl
 
 LUAGSL_LIBS = $(LUADIR)/src/liblua.a 
 
@@ -121,7 +121,7 @@ all: $(SUBDIRS) $(TARGETS)
 ifeq ($(PLATFORM), mingw)
 
 gsl-shell.exe: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
-	$(CC) -Wl,--enable-auto-import -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)
+	$(CC) -Wl,--enable-auto-import -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS) -Ltinygl -lTinyGL
 
 luagsl.a: $(LUAGSL_OBJ_FILES)
 	$(AR) $@ $?
@@ -132,7 +132,7 @@ gsl.dll: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
 else
 
 gsl-shell: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
-	$(CC) -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS) -Wl,-E -ldl -lreadline -lhistory -lncurses
+	$(CC) -o $@ $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS) -Wl,-E -ldl -lreadline -lhistory -lncurses -Ltinygl -lTinyGL
 
 gsl.so: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
 	$(CC) -shared -o .libs/libluagsl.so $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS) $(LIBS)

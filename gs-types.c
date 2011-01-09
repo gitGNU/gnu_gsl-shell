@@ -32,6 +32,7 @@ static int gs_type_string (lua_State *L);
 #define GS_DRAW_TEXT_NAME_DEF   "GSL.text"
 #define GS_RGBA_COLOR_NAME_DEF  "GSL.rgba"
 #define GS_WINDOW_NAME_DEF  "GSL.window"
+#define GS_GL_WINDOW_NAME_DEF  "GSL.glwin"
 #define GS_PLOT_NAME_DEF  "GSL.plot"
 #endif
 
@@ -66,6 +67,7 @@ const struct gs_type gs_type_table[] = {
   MY_EXPAND_DER(DRAW_TEXT, "graphical text", DRAW_DRAWABLE),
   MY_EXPAND(RGBA_COLOR, "color"),
   MY_EXPAND(WINDOW, "graphical window"),
+  MY_EXPAND(GL_WINDOW, "GL window"),
   MY_EXPAND(PLOT, "plot"),
 #endif
   {GS_INVALID_TYPE, NULL, NULL, GS_NO_TYPE}

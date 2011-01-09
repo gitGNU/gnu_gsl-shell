@@ -33,6 +33,7 @@ enum gs_type_e {
   GS_DRAW_TEXT,
   GS_RGBA_COLOR,
   GS_WINDOW,
+  GS_GL_WINDOW,
   GS_PLOT,
 #endif
   GS_INVALID_TYPE,

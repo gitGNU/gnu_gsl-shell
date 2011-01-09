@@ -42,17 +42,20 @@ else
   PLATSUP_SRC_FILES = agg_platform_support_x11.cpp
 endif
 
-INCLUDES += $(AGG_INCLUDES) -I$(GSH_BASE_DIR) -I$(LUADIR)/src
+INCLUDES += $(AGG_INCLUDES) -I$(GSH_BASE_DIR) -I$(LUADIR)/src -I$(GSH_BASE_DIR)/tinygl
 
-AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp units.cpp colors.cpp markers.cpp lua-draw.cpp lua-text.cpp text.cpp agg-parse-trans.cpp window.cpp lua-plot.cpp canvas-window.cpp bitmap-plot.cpp
+AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp units.cpp colors.cpp markers.cpp lua-draw.cpp lua-text.cpp text.cpp agg-parse-trans.cpp window.cpp lua-plot.cpp canvas-window.cpp bitmap-plot.cpp gl-window.cpp
 
-AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o)
+AGGPLOT_C_SRC_FILES = gears.c
 
-DEP_FILES := $(AGGPLOT_SRC_FILES:%.cpp=.deps/%.P)
+AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o) $(AGGPLOT_C_SRC_FILES:%.c=%.o)
+
+DEP_FILES := $(AGGPLOT_SRC_FILES:%.cpp=.deps/%.P) $(AGGPLOT_C_SRC_FILES:%.c=.deps/%.P)
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
 CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES) 
+COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES) 
 
 TARGETS = libaggplot.a
 

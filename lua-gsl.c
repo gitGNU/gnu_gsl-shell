@@ -52,6 +52,7 @@
 #include "lua-draw.h"
 #include "lua-text.h"
 #include "window.h"
+#include "gl-window.h"
 #include "lua-plot.h"
 #endif
 
@@ -95,6 +96,7 @@ luaopen_gsl (lua_State *L)
   draw_register (L);
   text_register (L);
   window_register (L);
+  gl_window_register (L);
   plot_register (L);
 #endif
 
