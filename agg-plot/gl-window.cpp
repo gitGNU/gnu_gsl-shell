@@ -1,4 +1,6 @@
 
+#include "util/agg_color_conv_rgb8.h"
+
 #include "gl-window.h"
 #include "gl-window-cpp.h"
 
@@ -94,9 +96,33 @@ gl_window::on_draw()
 {
   canvas_window::on_draw();
   gear_draw();
-  ZB_copyFrameBuffer(m_zbuf, this->image_buffer(), m_xsize * 3);
+
+  agg::rendering_buffer rbuf_win;
+  this->attach_tinygl(rbuf_win);
+
+  agg::rendering_buffer rbuf_tgl;
+  unsigned w = rbuf_win.width(), h = rbuf_win.height();
+  rbuf_tgl.attach((unsigned char *) m_zbuf->pbuf, w, h, m_zbuf->linesize);
+
+  //rbuf_win.copy_from(rbuf_tgl);
+  my_color_conv(&rbuf_win, &rbuf_tgl, agg::color_conv_rgb24_to_bgr24());
+
   do_window_update();
 }
+
+#if 0
+void
+gl_window::on_draw()
+{
+  canvas_window::on_draw();
+  gear_draw();
+
+  agg::rendering_buffer rbuf_win;
+  this->attach_tinygl(rbuf_win);
+  ZB_copyFrameBuffer(m_zbuf, rbuf_win.row_ptr(0), rbuf_win.stride());
+  do_window_update();
+}
+#endif
 
 void
 gl_window::on_init()

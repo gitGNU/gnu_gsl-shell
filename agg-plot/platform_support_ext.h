@@ -18,6 +18,8 @@ public:
   void update_region (const agg::rect_base<int>& r);
   void do_window_update ();
 
+  void attach_tinygl(agg::rendering_buffer& rbuf);
+
   static void prepare();
 
   static bool save_image_file (agg::rendering_buffer& src, const char *fn);

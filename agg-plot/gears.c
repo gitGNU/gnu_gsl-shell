@@ -236,7 +236,7 @@ void gear_reshape( int width, int height )
 
 void gear_init( void )
 {
-   static GLfloat pos[4] = {5.0, 5.0, 10.0, 0.0 };
+   static GLfloat pos[4] = {5.0, 5.0, 5.0, 0.5 };
    static GLfloat red[4] = {0.8, 0.1, 0.0, 1.0 };
    static GLfloat green[4] = {0.0, 0.8, 0.2, 1.0 };
    static GLfloat blue[4] = {0.2, 0.2, 1.0, 1.0 };

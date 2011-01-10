@@ -27,7 +27,7 @@ public:
 
 private:
   static int resize_viewport(GLContext *c, int *xsize_ptr, int *ysize_ptr);
-  unsigned char *image_buffer() { return rbuf_window().buf(); };
+  //  unsigned char *image_buffer() { return rbuf_window().buf(); };
 
   const static int TINYGL_MODE = ZB_MODE_RGB24;
 

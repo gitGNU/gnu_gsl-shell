@@ -664,3 +664,11 @@ platform_support_ext::do_window_update()
   agg::rect_base<int> r(0, 0, rbuf_window().width(), rbuf_window().height());
   update_region(r);
 }
+
+void
+platform_support_ext::attach_tinygl(agg::rendering_buffer& rbuf)
+{
+  agg::rendering_buffer& rbw = this->rbuf_window();
+  int stride = this->flip_y() ? -rbw.stride() : rbw.stride();
+  rbuf.attach(rbw.buf(), rbw.width(), rbw.height(), stride);
+}

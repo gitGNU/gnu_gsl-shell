@@ -1181,3 +1181,11 @@ platform_support_ext::save_image_file (agg::rendering_buffer& rbuf, const char *
   fclose(fd);
   return true;
 }
+
+void
+platform_support_ext::attach_tinygl(agg::rendering_buffer& rbuf)
+{
+  agg::rendering_buffer& rbw = this->rbuf_window();
+  int stride = this->flip_y() ? rbw.stride() : -rbw.stride();
+  rbuf.attach(rbw.buf(), rbw.width(), rbw.height(), stride);
+}
