@@ -13,7 +13,7 @@ static int gl_window_new (lua_State *L);
 static int gl_window_free (lua_State *L);
 
 static const struct luaL_Reg gl_window_functions[] = {
-  {"GLWindow",        gl_window_new},
+  {"glwindow",        gl_window_new},
   {NULL, NULL}
 };
 
@@ -32,16 +32,13 @@ gl_window::resize_viewport(GLContext *c, int *xsize_ptr, int *ysize_ptr)
 
   /* we ensure that xsize and ysize are multiples of 2 for the zbuffer. 
      TODO: find a better solution */
-  //  xsize &= ~3;
-  //  ysize &= ~3;
+  xsize &= ~3;
+  ysize &= ~3;
 
   if (xsize == 0 || ysize == 0) return -1;
 
   *xsize_ptr = xsize;
   *ysize_ptr = ysize;
-  
-  win->m_xsize = xsize;
-  win->m_ysize = ysize;
 
   ZB_resize(c->zb, NULL, xsize, ysize);
 
@@ -51,7 +48,7 @@ gl_window::resize_viewport(GLContext *c, int *xsize_ptr, int *ysize_ptr)
 void
 gl_window::start (lua_State *L, gslshell::ret_status& st)
 {
-  int xs = 480, ys = 480;
+  int xs = TGL_XSIZE, ys = TGL_YSIZE;
   m_zbuf = ZB_open(xs, ys, TINYGL_MODE, 0, NULL, NULL, NULL);
 
   /* initialisation of the TinyGL interpreter */
@@ -97,37 +94,22 @@ gl_window::on_draw()
   canvas_window::on_draw();
   gear_draw();
 
-  agg::rendering_buffer rbuf_win;
-  this->attach_tinygl(rbuf_win);
-
   agg::rendering_buffer rbuf_tgl;
-  unsigned w = rbuf_win.width(), h = rbuf_win.height();
-  rbuf_tgl.attach((unsigned char *) m_zbuf->pbuf, w, h, m_zbuf->linesize);
+  unsigned bw = m_zbuf->xsize, bh = m_zbuf->ysize;
+  rbuf_tgl.attach((unsigned char *) m_zbuf->pbuf, bw, bh, -m_zbuf->linesize);
 
-  //rbuf_win.copy_from(rbuf_tgl);
-  my_color_conv(&rbuf_win, &rbuf_tgl, agg::color_conv_rgb24_to_bgr24());
+  agg::pixfmt_rgb24 pixf_tgl(rbuf_tgl);
+
+  unsigned w = this->width(), h = this->height();
+  agg::trans_affine cmap = agg::trans_affine_scaling((double)w, (double)h);
+  m_canvas->draw_image(pixf_tgl, cmap);
 
   do_window_update();
 }
-
-#if 0
-void
-gl_window::on_draw()
-{
-  canvas_window::on_draw();
-  gear_draw();
-
-  agg::rendering_buffer rbuf_win;
-  this->attach_tinygl(rbuf_win);
-  ZB_copyFrameBuffer(m_zbuf, rbuf_win.row_ptr(0), rbuf_win.stride());
-  do_window_update();
-}
-#endif
 
 void
 gl_window::on_init()
 {
-  printf("on init\n");
   canvas_window::on_init();
   gear_init ();
 }
@@ -135,9 +117,8 @@ gl_window::on_init()
 void
 gl_window::on_resize(int sx, int sy)
 {
-  printf("on resize\n");
   canvas_window::on_resize(sx, sy);
-  gear_reshape(sx, sy);
+  gear_reshape(TGL_XSIZE, TGL_YSIZE);
 }
 
 int

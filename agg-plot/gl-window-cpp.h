@@ -27,13 +27,13 @@ public:
 
 private:
   static int resize_viewport(GLContext *c, int *xsize_ptr, int *ysize_ptr);
-  //  unsigned char *image_buffer() { return rbuf_window().buf(); };
 
   const static int TINYGL_MODE = ZB_MODE_RGB24;
+  static const unsigned TGL_XSIZE = 480;
+  static const unsigned TGL_YSIZE = 480;
 
   ZBuffer *m_zbuf;
   GLContext *m_gl_context;
-  int m_xsize, m_ysize;
 };
 
 #endif
