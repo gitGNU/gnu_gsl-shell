@@ -13,7 +13,13 @@
 #include "agg_renderer_scanline.h"
 #include "agg_trans_viewport.h"
 #include "agg_conv_stroke.h"
-
+#include "agg_path_storage.h"
+#include "agg_trans_affine.h"
+#include "agg_conv_transform.h"
+#include "agg_pixfmt_rgba.h"
+#include "agg_span_image_filter_rgb.h"
+#include "agg_span_interpolator_linear.h"
+#include "agg_span_allocator.h"
 #include "agg_gamma_lut.h"
 
 class pixel_gamma_corr {
@@ -89,6 +95,38 @@ public:
     this->ras.add_path(vs);
     this->rs.color(c);
     agg::render_scanlines(this->ras, this->sl, this->rs);
+  };
+
+  template<class pixfmt>
+  void draw_image(pixfmt& img, const agg::trans_affine& cmap)
+  {
+    agg::trans_affine image_mtx = cmap;
+    image_mtx.invert();
+
+    unsigned w = img.width(), h = img.height(); 
+    image_mtx *= agg::trans_affine_scaling((double)w, (double)h);
+
+    typedef agg::span_interpolator_linear<> interpolator_type;
+    interpolator_type interpolator(image_mtx);
+    agg::span_allocator<agg::rgba8> sa;
+
+    // "hardcoded" bilinear filter
+    //------------------------------------------
+    typedef agg::span_image_filter_rgb_bilinear_clip<pixfmt, interpolator_type> span_gen_type;
+    span_gen_type sg(img, bg_color, interpolator);
+    //------------------------------------------
+
+    agg::rasterizer_scanline_aa<> ras;
+    agg::path_storage ub;
+    ub.move_to(0.0, 0.0);
+    ub.line_to(1.0, 0.0);
+    ub.line_to(1.0, 1.0);
+    ub.line_to(0.0, 1.0);
+    ub.close_polygon();
+    agg::conv_transform<agg::path_storage> box(ub, cmap);
+
+    ras.add_path(box);
+    agg::render_scanlines_aa(ras, sl, rb, sa, sg);
   };
 
   template<class VertexSource>
