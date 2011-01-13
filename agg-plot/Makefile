@@ -46,7 +46,7 @@ INCLUDES += $(AGG_INCLUDES) -I$(GSH_BASE_DIR) -I$(LUADIR)/src -I$(GSH_BASE_DIR)/
 
 AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp units.cpp colors.cpp markers.cpp lua-draw.cpp lua-text.cpp text.cpp agg-parse-trans.cpp window.cpp lua-plot.cpp canvas-window.cpp bitmap-plot.cpp gl-window.cpp
 
-AGGPLOT_C_SRC_FILES = gears.c
+AGGPLOT_C_SRC_FILES = func-plot.c
 
 AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o) $(AGGPLOT_C_SRC_FILES:%.c=%.o)
 

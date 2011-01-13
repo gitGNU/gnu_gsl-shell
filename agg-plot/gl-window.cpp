@@ -7,7 +7,7 @@
 #include "object-index.h"
 #include "colors.h"
 
-#include "gears.h"
+#include "func-plot.h"
 
 static int gl_window_new (lua_State *L);
 static int gl_window_free (lua_State *L);
@@ -92,7 +92,7 @@ void
 gl_window::on_draw()
 {
   canvas_window::on_draw();
-  gear_draw();
+  plot2d_draw();
 
   agg::rendering_buffer rbuf_tgl;
   unsigned bw = m_zbuf->xsize, bh = m_zbuf->ysize;
@@ -111,14 +111,14 @@ void
 gl_window::on_init()
 {
   canvas_window::on_init();
-  gear_init ();
+  plot2d_init ();
 }
 
 void
 gl_window::on_resize(int sx, int sy)
 {
   canvas_window::on_resize(sx, sy);
-  gear_reshape(TGL_XSIZE, TGL_YSIZE);
+  plot2d_reshape(TGL_XSIZE, TGL_YSIZE);
 }
 
 int
