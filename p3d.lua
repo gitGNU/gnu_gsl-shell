@@ -3,9 +3,11 @@
 win = window()
 w = glplot()
 
+win:attach(w, '')
+
 local xmin, xmax = -20, 20
 local ymin, ymax = -20, 20
-local nx, ny = 20, 20
+local nx, ny = 40, 40
 
 local fecs = |x,y| exp(-0.3*2*(x^2+y^2)) * (cos(pi*x) + cos(pi*y))
 local fzero = |x,y| x*exp(-2*x^2-2*y^2)
@@ -63,4 +65,10 @@ for j=1, ny-1 do
 end
 
 w:close()
-win:attach(w, '')
+
+turn = 5
+N= 256
+for j=0, turn*N-1 do
+  local th = (j % N) *2*pi/(N-1)
+  w:rotate(-th, 0, pi/9)
+end

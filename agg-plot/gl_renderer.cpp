@@ -103,7 +103,7 @@ gl_renderer::end_list ()
   if (m_build_obj >= 0) glEnd();
   m_listid_head = new pod_list<int>(m_listid_current, m_listid_head);
   glEndList();
-  glEnable( GL_NORMALIZE );
+//  glEnable( GL_NORMALIZE );
 }
 
 bool
@@ -149,6 +149,7 @@ gl_renderer::gl_resize(GLfloat sx, GLfloat sy)
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   glTranslatef(0.0, 0.0, -40.0);
+  glEnable(GL_NORMALIZE);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
@@ -167,12 +168,9 @@ gl_renderer::gl_init()
 void
 gl_renderer::gl_draw()
 {
-  //   glEnable( GL_NORMALIZE );
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
   glPushMatrix();
-
-  //   glPushMatrix();
   glRotatef( m_view_rot[0], 1.0, 0.0, 0.0 );
   glRotatef( m_view_rot[1], 0.0, 1.0, 0.0 );
   glRotatef( m_view_rot[2], 0.0, 0.0, 1.0 );
@@ -197,9 +195,5 @@ gl_renderer::gl_draw()
        glCallList(n->content());
      }
    glPopMatrix();
-
-   //   if (m_listid_head != 0)
-   //  glPopMatrix();
-
    glPopMatrix();
 }

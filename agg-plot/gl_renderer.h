@@ -14,10 +14,8 @@ public:
     m_bbox_set(false),
     m_listid_head(0), m_listid_current(-1), m_build_obj(-1),
     m_zbuf(0), m_gl_context(0)
-  { 
-    m_view_rot[0] = -70;
-    m_view_rot[1] = 0;
-    m_view_rot[2] = 20;
+  {
+  //  set_rotation(- M_PI_2 * 7/9, 0.0, M_PI_2 * 2/9);
   };
 
   void init();
@@ -30,6 +28,12 @@ public:
   void end();
 
   void bbox(double x, double y, double z);
+  void set_rotation(double ax, double ay, double az)
+  {
+    m_view_rot[0] = ax * 180.0 / M_PI;
+    m_view_rot[1] = ay * 180.0 / M_PI;
+    m_view_rot[2] = az * 180.0 / M_PI;
+  };
 
   void draw(agg::rendering_buffer& glbuf, unsigned xsize, unsigned ysize);
 

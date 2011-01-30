@@ -7,19 +7,24 @@ __BEGIN_DECLS
 __END_DECLS
 
 #include "lua-cpp-utils.h"
+#include "object-refs.h"
+#include "window.h"
 #include "gl_plot.h"
 #include "gl_plot_cpp.h"
 #include "rect.h"
 #include "colors.h"
 
-static int gl_plot_new      (lua_State *L);
-static int gl_plot_free     (lua_State *L);
-static int gl_plot_new_list (lua_State *L);
-static int gl_plot_end_list (lua_State *L);
-static int gl_plot_begin    (lua_State *L);
-static int gl_plot_end      (lua_State *L);
-static int gl_plot_vertex   (lua_State *L);
-static int gl_plot_normal   (lua_State *L);
+static int gl_plot_new       (lua_State *L);
+static int gl_plot_free      (lua_State *L);
+static int gl_plot_new_list  (lua_State *L);
+static int gl_plot_end_list  (lua_State *L);
+static int gl_plot_begin     (lua_State *L);
+static int gl_plot_end       (lua_State *L);
+static int gl_plot_vertex    (lua_State *L);
+static int gl_plot_normal    (lua_State *L);
+static int gl_plot_model_rot (lua_State *L);
+
+static void gl_plot_update_raw (lua_State *L, gl_plot *p, int plot_index);
 
 static const struct luaL_Reg gl_plot_functions[] = {
   {"glplot",        gl_plot_new},
@@ -34,6 +39,7 @@ static const struct luaL_Reg gl_plot_methods[] = {
   {"vend",          gl_plot_end   },
   {"vertex",        gl_plot_vertex   },
   {"normal",        gl_plot_normal   },
+  {"rotate",        gl_plot_model_rot},
   {NULL, NULL}
 };
 
@@ -76,6 +82,7 @@ gl_plot_end_list (lua_State *L)
   gl_renderer& ren = p->renderer();
   if (ren.list_is_open())
     ren.end_list();
+  gl_plot_update_raw (L, p, 1);
   return 0;
 }
 
@@ -129,6 +136,24 @@ gl_plot_normal (lua_State *L)
   double z = gs_check_number (L, 4, true);
   glNormal3f(x, y, z);
   return 0;
+}
+
+int
+gl_plot_model_rot (lua_State *L)
+{
+  gl_plot *p = object_check<gl_plot>(L, 1, GS_GLPLOT);
+  double ax = gs_check_number (L, 2, true);
+  double ay = gs_check_number (L, 3, true);
+  double az = gs_check_number (L, 4, true);
+  p->renderer().set_rotation(ax, ay, az);
+  gl_plot_update_raw (L, p, 1);
+  return 0;
+}
+
+void
+gl_plot_update_raw (lua_State *L, gl_plot *p, int plot_index)
+{
+  object_refs_lookup_apply (L, table_window_plot, plot_index, window_slot_update);
 }
 
 void
