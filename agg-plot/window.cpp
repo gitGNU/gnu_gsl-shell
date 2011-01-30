@@ -12,7 +12,6 @@ extern "C" {
 #include "object-refs.h"
 #include "object-index.h"
 #include "colors.h"
-#include "lua-plot-cpp.h"
 #include "split-parser.h"
 #include "platform_support_ext.h"
 
@@ -335,7 +334,7 @@ next_int (const char *str, int& val)
 }
 
 /* Returns the slot_id or -1 in case of error. */
-int window::attach(lua_plot *plot, const char *spec)
+int window::attach(window::plot_type *plot, const char *spec)
 {
   ref::node *n = m_tree;
   const char *ptr;
@@ -498,7 +497,7 @@ int
 window_attach (lua_State *L)
 {
   window *win = object_check<window>(L, 1, GS_WINDOW);
-  lua_plot *plot = object_check<lua_plot>(L, 2, GS_PLOT);
+  window::plot_type *plot = object_check<window::plot_type>(L, 2, GS_PLOT);
   const char *spec = luaL_checkstring (L, 3);
 
   win->lock();

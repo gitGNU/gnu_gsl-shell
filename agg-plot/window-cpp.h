@@ -8,9 +8,8 @@ extern "C" {
 #include "window.h"
 #include "canvas-window-cpp.h"
 #include "resource-manager.h"
-#include "lua-plot-cpp.h"
 #include "lua-cpp-utils.h"
-#include "plot.h"
+#include "vplot.h"
 #include "drawable.h"
 #include "rect.h"
 #include "my_list.h"
@@ -21,7 +20,7 @@ extern "C" {
 
 class window : public canvas_window {
 public:
-  typedef plot<drawable, lua_management> plot_type;
+  typedef vplot plot_type;
 
   int window_id;
 
@@ -73,7 +72,7 @@ public:
   ~window() { if (m_tree) delete m_tree; };
 
   bool split(const char *spec);
-  int attach(lua_plot *plot, const char *spec);
+  int attach(plot_type *plot, const char *spec);
   void draw_slot(int slot_id, bool update_req);
   void refresh_slot(int slot_id);
   void start(lua_State *L, gslshell::ret_status& st);

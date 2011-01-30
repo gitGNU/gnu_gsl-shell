@@ -54,6 +54,7 @@ class canvas_gen : private pixel {
   typedef agg::renderer_base<typename pixel::fmt> renderer_base;
   typedef agg::renderer_scanline_aa_solid<renderer_base> renderer_solid;
 
+  agg::rendering_buffer& m_rbuf;
   renderer_base rb;
   renderer_solid rs;
 
@@ -62,13 +63,13 @@ class canvas_gen : private pixel {
 
   agg::rgba bg_color;
 
+
   double m_width;
   double m_height;
 
 public:
-  canvas_gen(agg::rendering_buffer& ren_buf, double width, double height, 
-	     agg::rgba bgcol): 
-    pixel(ren_buf), rb(pixel::pixfmt), rs(rb),
+  canvas_gen(agg::rendering_buffer& ren_buf, double width, double height, agg::rgba bgcol): 
+    pixel(ren_buf), m_rbuf(ren_buf), rb(pixel::pixfmt), rs(rb),
     ras(), sl(), bg_color(bgcol),
     m_width(width), m_height(height)
   {
@@ -100,36 +101,18 @@ public:
     agg::render_scanlines(this->ras, this->sl, this->rs);
   };
 
-  template<class pixfmt>
-  void draw_image(pixfmt& img, const agg::trans_affine& cmap)
+  template <class RenBufSrc, class CopyRow>
+  void draw_buffer (RenBufSrc *src, unsigned xdst, unsigned ydst, CopyRow copy_row_functor)
   {
-    agg::trans_affine image_mtx = cmap;
-    image_mtx.invert();
+    agg::rendering_buffer& dst = this->m_rbuf;
 
-    unsigned w = img.width(), h = img.height(); 
-    image_mtx *= agg::trans_affine_scaling((double)w, (double)h);
+    unsigned int width  = src->width();
+    unsigned int height = src->height();
 
-    typedef agg::span_interpolator_linear<> interpolator_type;
-    interpolator_type interpolator(image_mtx);
-    agg::span_allocator<agg::rgba8> sa;
-
-    // "hardcoded" bilinear filter
-    //------------------------------------------
-    typedef agg::span_image_filter_rgb_bilinear_clip<pixfmt, interpolator_type> span_gen_type;
-    span_gen_type sg(img, bg_color, interpolator);
-    //------------------------------------------
-
-    agg::rasterizer_scanline_aa<> ras;
-    agg::path_storage ub;
-    ub.move_to(0.0, 0.0);
-    ub.line_to(1.0, 0.0);
-    ub.line_to(1.0, 1.0);
-    ub.line_to(0.0, 1.0);
-    ub.close_polygon();
-    agg::conv_transform<agg::path_storage> box(ub, cmap);
-
-    ras.add_path(box);
-    agg::render_scanlines_aa(ras, sl, rb, sa, sg);
+    for(unsigned int y = 0; y < height; y++)
+    {
+      copy_row_functor(dst.row_ptr(xdst, ydst + y, width), src->row_ptr(y), width);
+    }
   };
 
   template<class VertexSource>

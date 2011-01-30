@@ -1,25 +1,17 @@
-#ifndef GL_WINDOW_CPP_H
-#define GL_WINDOW_CPP_H
+#ifndef GL_RENDERER_H
+#define GL_RENDERER_H
 
-extern "C" {
-#include "lua.h"
-}
-
-#include "gl-window.h"
 #include "zbuffer.h"
 #include "zgl.h"
 
-#include "canvas-window-cpp.h"
 #include "agg_color_rgba.h"
-#include "lua-cpp-utils.h"
+#include "agg_rendering_buffer.h"
 #include "my_list.h"
 
-class gl_window :  public canvas_window {
+class gl_renderer {
 public:
-  int window_id;
-
-  gl_window(agg::rgba& bgcol) : 
-    canvas_window(bgcol), m_bbox_set(false),
+  gl_renderer() :
+    m_bbox_set(false),
     m_listid_head(0), m_listid_current(-1), m_build_obj(-1),
     m_zbuf(0), m_gl_context(0)
   { 
@@ -28,20 +20,18 @@ public:
     m_view_rot[2] = 20;
   };
 
-  virtual void on_init();
-  virtual void on_draw();
-  virtual void on_resize(int sx, int sy);
-
+  void init();
   
   void new_list(agg::rgba8& col);
   void end_list();
   bool list_is_open () const { return m_listid_current >= 0; };
+
   bool begin(const char *tp);
   void end();
 
-  void start (lua_State *L, gslshell::ret_status& st);
-
   void bbox(double x, double y, double z);
+
+  void draw(agg::rendering_buffer& glbuf, unsigned xsize, unsigned ysize);
 
 private:
 
@@ -53,11 +43,8 @@ private:
 
   enum { 
     tinygl_mode = ZB_MODE_RGB24,
-    tinygl_xsize = 480,
-    tinygl_ysize = 480
   };
 
-  GLfloat m_xsize, m_ysize;
   GLfloat m_view_rot[3];
 
   bool m_bbox_set;

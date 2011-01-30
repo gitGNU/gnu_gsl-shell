@@ -4,6 +4,8 @@
 #include "agg_basics.h"
 #include "platform/agg_platform_support.h"
 
+#include "utils.h"
+
 class platform_support_ext : public agg::platform_support {
 public:
   platform_support_ext (agg::pix_format_e format, bool flip_y)
@@ -22,18 +24,6 @@ public:
 
   static bool save_image_file (agg::rendering_buffer& src, const char *fn);
 };
-
-template<class RenBufDst, class RenBufSrc, class CopyRow> 
-void my_color_conv(RenBufDst* dst, const RenBufSrc* src, CopyRow copy_row_functor)
-{
-  unsigned int width  = src->width();
-  unsigned int height = src->height();
-
-  for(unsigned int y = 0; y < height; y++)
-    {
-      copy_row_functor(dst->row_ptr(0, y, width), src->row_ptr(y), width);
-    }
-}
 
 template<class RenBufDst, class RenBufSrc> 
 void rendering_buffer_get_region (RenBufDst& dst, RenBufSrc& src, agg::rect_base<int>& r,

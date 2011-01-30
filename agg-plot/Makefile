@@ -44,13 +44,11 @@ endif
 
 INCLUDES += $(AGG_INCLUDES) -I$(GSH_BASE_DIR) -I$(LUADIR)/src -I$(GSH_BASE_DIR)/tinygl
 
-AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp units.cpp colors.cpp markers.cpp lua-draw.cpp lua-text.cpp text.cpp agg-parse-trans.cpp window.cpp lua-plot.cpp canvas-window.cpp bitmap-plot.cpp gl-window.cpp
+AGGPLOT_SRC_FILES = $(PLATSUP_SRC_FILES) utils.cpp units.cpp colors.cpp markers.cpp lua-draw.cpp lua-text.cpp text.cpp agg-parse-trans.cpp window.cpp lua-plot.cpp canvas-window.cpp bitmap-plot.cpp gl_renderer.cpp gl_plot.cpp
 
-AGGPLOT_C_SRC_FILES = func-plot.c
+AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o)
 
-AGGPLOT_OBJ_FILES := $(AGGPLOT_SRC_FILES:%.cpp=%.o) $(AGGPLOT_C_SRC_FILES:%.c=%.o)
-
-DEP_FILES := $(AGGPLOT_SRC_FILES:%.cpp=.deps/%.P) $(AGGPLOT_C_SRC_FILES:%.c=.deps/%.P)
+DEP_FILES := $(AGGPLOT_SRC_FILES:%.cpp=.deps/%.P)
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 

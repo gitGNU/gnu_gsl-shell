@@ -31,6 +31,7 @@
 #include "resource-manager.h"
 #include "colors.h"
 #include "rect.h"
+#include "vplot.h"
 
 #include "agg_array.h"
 #include "agg_bounding_rect.h"
@@ -59,7 +60,7 @@ struct plot_item {
 };
 
 template<class vertex_source, class resource_manager>
-class plot {
+class plot : public vplot {
   typedef plot_item<vertex_source> item;
   typedef agg::pod_bvector<item> item_list;
 
@@ -103,8 +104,10 @@ public:
 
   virtual void add(vertex_source* vs, agg::rgba8& color, bool outline);
   virtual void before_draw() { };
-  
-  void draw(canvas &canvas, agg::trans_affine& m);
+
+  virtual void draw(canvas &canvas, agg::trans_affine& m);
+  virtual bool need_redraw() const { return m_need_redraw; };
+  virtual void draw_queue(canvas &canvas, agg::trans_affine& m, opt_rect<double>& bbox);
 
   virtual bool push_layer();
   virtual bool pop_layer();
@@ -115,10 +118,7 @@ public:
   void clear_current_layer();
   int current_layer_index();
 
-  bool need_redraw() const { return m_need_redraw; };
   void commit_pending_draw();
-
-  void draw_queue(canvas &canvas, agg::trans_affine& m, opt_rect<double>& bbox);
 
   void sync_mode(bool req_mode) { m_sync_mode = req_mode; };
   bool sync_mode() const { return m_sync_mode; };
