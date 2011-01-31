@@ -15,8 +15,17 @@ public:
     m_listid_head(0), m_listid_current(-1), m_build_obj(-1),
     m_zbuf(0), m_gl_context(0)
   {
+    this->init();
   //  set_rotation(- M_PI_2 * 7/9, 0.0, M_PI_2 * 2/9);
   };
+
+  ~gl_renderer()
+  {
+    if (m_zbuf)
+      ZB_close(m_zbuf);
+    m_gl_context = 0;
+    list::free(m_listid_head);
+  }
 
   void init();
   

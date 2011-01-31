@@ -6,7 +6,7 @@
 
 class gl_plot : public vplot {
 public:
-  gl_plot() : vplot(), m_gl_ren() { m_gl_ren.init(); };
+  gl_plot() : vplot(), m_gl_ren() { };
 
   virtual void draw(canvas &canvas, agg::trans_affine& m);
   virtual bool need_redraw() const { return false; };

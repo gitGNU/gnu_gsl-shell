@@ -1,10 +1,10 @@
 
 #include "util/agg_color_conv_rgb8.h"
 
-__BEGIN_DECLS
+extern "C" {
 #include "lua.h"
 #include "lauxlib.h"
-__END_DECLS
+}
 
 #include "lua-cpp-utils.h"
 #include "object-refs.h"
