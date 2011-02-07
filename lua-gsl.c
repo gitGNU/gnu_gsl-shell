@@ -28,6 +28,7 @@
 #include "cnlinfit.h"
 #include "matrix.h"
 #include "cmatrix.h"
+#include "lcomplex.h"
 #include "matrix_arith.h"
 #include "linalg.h"
 #include "integ.h"
@@ -47,8 +48,7 @@
 #include "interp.h"
 
 #ifdef AGG_PLOT_ENABLED
-#include "object-index.h"
-#include "object-refs.h"
+#include "window_registry.h"
 #include "lua-draw.h"
 #include "lua-text.h"
 #include "window.h"
@@ -56,7 +56,19 @@
 #include "lua-plot.h"
 #endif
 
+#ifdef LUA_STRICT
 static const struct luaL_Reg gsl_methods_dummy[] = {{NULL, NULL}};
+#endif
+
+#ifdef GSL_SHELL_DEBUG
+
+static int gsl_shell_lua_registry (lua_State *L);
+
+static const struct luaL_Reg gsl_shell_debug_functions[] = {
+  {"registry", gsl_shell_lua_registry},
+  {NULL, NULL}
+};
+#endif
 
 int
 luaopen_gsl (lua_State *L)
@@ -64,11 +76,10 @@ luaopen_gsl (lua_State *L)
   gsl_set_error_handler_off ();
 
 #ifdef AGG_PLOT_ENABLED
-  object_index_prepare (L);
-  object_refs_prepare (L);
+  window_registry_prepare (L);
 #endif
 
-#ifdef USE_SEPARATE_NAMESPACE
+#ifdef LUA_STRICT
   luaL_register (L, MLUA_GSLLIBNAME, gsl_methods_dummy);
 #else
   lua_pushvalue (L, LUA_GLOBALSINDEX);
@@ -79,6 +90,7 @@ luaopen_gsl (lua_State *L)
   solver_register (L);
   matrix_register (L);
   matrix_arith_register (L);
+  lcomplex_register (L);
   linalg_register (L);
   integ_register (L);
   ode_register (L);
@@ -100,19 +112,25 @@ luaopen_gsl (lua_State *L)
   plot_register (L);
 #endif
 
-#ifdef LNUM_COMPLEX
-  lua_pushboolean (L, 1);
-  lua_setfield (L, -2, "have_complex");
-
   fft_register (L);
   matrix_complex_register (L);
   ode_complex_register (L);
   solver_complex_register (L);
-#else
-  lua_pushboolean (L, 0);
-  lua_setfield (L, -2, "have_complex");
+
+#ifdef GSL_SHELL_DEBUG
+  luaL_register (L, NULL, gsl_shell_debug_functions);
 #endif
+
   lua_pop (L, 1);
 
   return 1;
 }
+
+#ifdef GSL_SHELL_DEBUG
+int
+gsl_shell_lua_registry (lua_State *L)
+{
+  lua_pushvalue (L, LUA_REGISTRYINDEX);
+  return 1;
+}
+#endif

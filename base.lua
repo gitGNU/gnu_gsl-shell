@@ -7,23 +7,40 @@ function divmod(n, p)
    return (n-r)/p, r
 end
 
-local function tos(t, maxdepth)
-   if type(t) == 'table' then
+local tos
+
+local function key_tos(k)
+   if type(k) == 'string' then
+      return string.match(k, "[%a_][%a%d_]*") and k or string.format('[%q]', k)
+   else
+      return '[' .. tos(k) .. ']'
+   end
+end
+
+tos = function (t, maxdepth)
+   local tp = type(t)
+   if tp == 'table' then
       if maxdepth <= 0 then return '<table>' end
       local ls, n = {}, #t
-      for i, v in ipairs(t) do insert(ls, tos(v, maxdepth-1)) end
+      local skip = {}
+      for i, v in ipairs(t) do 
+	 skip[i] = true
+	 insert(ls, tos(v, maxdepth-1))
+      end
       for k, v in pairs(t) do
-	 if type(k) ~= 'number' or k < 1 or k > n then
-	    insert(ls, tos(k, 1) .. '= ' .. tos(v, maxdepth-1))
+	 if not skip[k] then
+	    insert(ls, key_tos(k, 1) .. '= ' .. tos(v, maxdepth-1))
 	 end
       end
       return '{' .. cat(ls, ', ') .. '}'
-   elseif type(t) == 'function' then
+   elseif tp == 'function' then
       return '<function>'
-   elseif type(t) == 'userdata' then
+   elseif tp == 'string' then
+      return string.format('%q', t)
+   elseif tp == 'userdata' then
       local ftostr = getmetatable(t).__tostring
       if ftostr then return ftostr(t) else
-	 return string.format('<%s>', gsltype(t))
+	 return gsltype and string.format('<%s>', gsltype(t)) or '<userdata>'
       end
    else
       return tostring(t)
@@ -38,6 +55,7 @@ local function myprint(...)
    io.write('\n')
 end
 
+echo = print
 print = myprint
 
 function sequence(f, a, b)

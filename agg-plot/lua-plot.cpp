@@ -30,7 +30,7 @@ extern "C" {
 #include "window.h"
 #include "gs-types.h"
 #include "lua-utils.h"
-#include "object-refs.h"
+#include "window_registry.h"
 #include "lua-cpp-utils.h"
 #include "lua-draw.h"
 #include "colors.h"
@@ -116,6 +116,9 @@ plot_new (lua_State *L)
   typedef plot_auto<drawable, lua_management> plot_type;
   lua_plot *p = push_new_object<plot_type>(L, GS_PLOT);
 
+  lua_newtable (L);
+  lua_setfenv (L, -2);
+
   if (lua_isstring (L, 1))
     {
       const char *title = lua_tostring (L, 1);
@@ -130,6 +133,9 @@ int
 canvas_new (lua_State *L)
 {
   lua_plot *p = push_new_object<lua_plot>(L, GS_PLOT);
+
+  lua_newtable (L);
+  lua_setfenv (L, -2);
 
   p->sync_mode(false);
 
@@ -170,6 +176,31 @@ plot_add_gener_cpp (lua_State *L, lua_plot *p, bool as_line,
     }
 }
 
+static void
+objref_mref_add (lua_State *L, int table_index, int index, int value_index)
+{
+  int n;
+  INDEX_SET_ABS(L, table_index);
+
+  lua_rawgeti (L, table_index, index);
+  if (lua_isnil (L, -1))
+    {
+      lua_pop (L, 1);
+      lua_newtable (L);
+      lua_pushvalue (L, -1);
+      lua_rawseti (L, table_index, index);
+      n = 0;
+    }
+  else
+    {
+      n = lua_objlen (L, -1);
+    }
+
+  lua_pushvalue (L, value_index);
+  lua_rawseti (L, -2, n+1);
+  lua_pop (L, 1);
+}
+
 int
 plot_add_gener (lua_State *L, bool as_line)
 {
@@ -181,7 +212,8 @@ plot_add_gener (lua_State *L, bool as_line)
   if (st.error_msg())
     return luaL_error (L, "%s in %s", st.error_msg(), st.context());
 
-  object_refs_add (L, table_plot_obj, p->current_layer_index(), 1, 2);
+  lua_getfenv (L, 1);
+  objref_mref_add (L, -1, p->current_layer_index(), 2);
 
   return 0;
 }
@@ -270,7 +302,7 @@ plot_newindex (lua_State *L)
 void
 plot_update_raw (lua_State *L, lua_plot *p, int plot_index)
 {
-  object_refs_lookup_apply (L, table_window_plot, plot_index, window_slot_update);
+  window_refs_lookup_apply (L, plot_index, window_slot_update);
   p->commit_pending_draw();
 }
 
@@ -286,7 +318,7 @@ int
 plot_flush (lua_State *L)
 {
   lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
-  object_refs_lookup_apply (L, table_window_plot, 1, window_slot_refresh);
+  window_refs_lookup_apply (L, 1, window_slot_refresh);
   p->commit_pending_draw();
   return 0;
 }
@@ -325,23 +357,32 @@ plot_push_layer (lua_State *L)
 {
   lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
 
-  object_refs_lookup_apply (L, table_window_plot, 1, window_slot_refresh);
+  window_refs_lookup_apply (L, 1, window_slot_refresh);
 
   AGG_LOCK();
   p->push_layer();
   AGG_UNLOCK();
 
-  object_refs_lookup_apply (L, table_window_plot, 1, window_save_slot_image);
+  window_refs_lookup_apply (L, 1, window_save_slot_image);
 
   return 0;
 }
+
+static void
+plot_ref_clear (lua_State *L, int index, int layer_id)
+{
+  lua_getfenv (L, index);
+  lua_newtable (L);
+  lua_rawseti (L, -2, layer_id);
+  lua_pop (L, 1);
+ }
 
 int
 plot_pop_layer (lua_State *L)
 {
   lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
 
-  object_refs_remove (L, table_plot_obj, p->current_layer_index(), 1);
+  plot_ref_clear (L, 1, p->current_layer_index());
 
   AGG_LOCK();
   p->pop_layer();
@@ -356,13 +397,13 @@ plot_clear (lua_State *L)
 {
   lua_plot *p = object_check<lua_plot>(L, 1, GS_PLOT);
 
-  object_refs_remove (L, table_plot_obj, p->current_layer_index(), 1);
+  plot_ref_clear (L, 1, p->current_layer_index());
 
   AGG_LOCK();
   p->clear_current_layer();
   AGG_UNLOCK();
 
-  object_refs_lookup_apply (L, table_window_plot, 1, window_restore_slot_image);
+  window_refs_lookup_apply (L, 1, window_restore_slot_image);
 
   if (p->sync_mode())
     plot_update_raw (L, p, 1);

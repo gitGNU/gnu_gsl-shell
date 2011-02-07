@@ -7,7 +7,7 @@ extern "C" {
 }
 
 #include "lua-cpp-utils.h"
-#include "object-refs.h"
+#include "window_registry.h"
 #include "window.h"
 #include "gl_plot.h"
 #include "gl_plot_cpp.h"
@@ -153,7 +153,7 @@ gl_plot_model_rot (lua_State *L)
 void
 gl_plot_update_raw (lua_State *L, gl_plot *p, int plot_index)
 {
-  object_refs_lookup_apply (L, table_window_plot, plot_index, window_slot_update);
+  window_refs_lookup_apply (L, plot_index, window_slot_update);
 }
 
 void

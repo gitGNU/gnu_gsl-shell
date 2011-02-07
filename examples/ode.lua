@@ -132,8 +132,8 @@ end
 
 function demo5()
    local t0, t1, h, tstep = 0, 30, 1e-4, 0.05
-   local alpha = 1i - 0.08
-   local z0 = 1.0 + 0.0i
+   local alpha = I - 0.08
+   local z0 = I
 
    local odef = function(t, z, f)
 		   f:set(1,1, alpha * z[1])
@@ -154,8 +154,8 @@ end
 
 function demo6()
    local t0, t1, h, tstep = 0, 30, 1e-4, 0.05
-   local alpha = 1i - 0.08
-   local z0 = 1.0 + 0.0i
+   local alpha = I - 0.08
+   local z0 = 1
 
    local odef = function(t, z, f)
 		   f:set(1,1, alpha * z[1])
@@ -200,10 +200,10 @@ function demo7()
    return plot_lines(ln)
 end
 
-print 'demo1() - ODE integration example'
-print 'demo2() - the same of demo1 but using GSL \'bsimp\' method'
-print 'demo3() - GSL example of Var der Pol oscillator integration'
-print 'demo4() - same as demo3 but using \'bsimp\' method'
-print 'demo5() - spriral obtained by ODE integration'
-print 'demo6() - spriral obtained by ODE integration using \'bsimp\' method'
-print 'demo7() - another ODE integration example'
+echo 'demo1() - ODE integration example'
+echo 'demo2() - the same of demo1 but using GSL \'bsimp\' method'
+echo 'demo3() - GSL example of Var der Pol oscillator integration'
+echo 'demo4() - same as demo3 but using \'bsimp\' method'
+echo 'demo5() - spriral obtained by ODE integration'
+echo 'demo6() - spriral obtained by ODE integration using \'bsimp\' method'
+echo 'demo7() - another ODE integration example'

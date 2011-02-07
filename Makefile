@@ -33,6 +33,14 @@ nono:
 	@echo "You haven't edited 'makeconfig' yet. Set your settings there, then run 'make' again"
 endif
 
+ifeq ($(strip $(LUA_BUILD)), yes)
+  CFG_FLAGS = -DLUA_STRICT
+else
+  CFG_FLAGS = -DGSH_SHORT_FSYNTAX
+endif
+
+DEFS += $(CFG_FLAGS)
+SUBDIRS_DEFS += $(CFG_FLAGS)
 
 ifeq ($(strip $(PLATFORM)), mingw)
 # Option for Windows Platform
@@ -56,14 +64,17 @@ endif
 
 SUBDIRS = lua tinygl
 
-LUAGSL_LIBS = $(LUADIR)/src/liblua.a 
+LUAGSL_LIBS = $(LUADIR)/src/liblua.a
 
-C_SRC_FILES = gs-types.c matrix.c matrix_arith.c nlinfit_helper.c \
+C_SRC_FILES = gs-types.c lcomplex.c matrix.c matrix_arith.c nlinfit_helper.c \
 		nlinfit.c lua-utils.c linalg.c \
 		integ.c ode_solver.c ode.c random.c randist.c \
 		pdf.c cdf.c sf.c fmultimin.c gradcheck.c fdfmultimin.c \
-                multimin.c eigen-systems.c mlinear.c bspline.c interp.c \
-		lua-gsl.c
+    multimin.c eigen-systems.c mlinear.c bspline.c interp.c \
+    cmatrix.c cnlinfit.c code.c fft.c lua-gsl.c
+
+LUA_BASE_DIRS = 
+LUA_BASE_FILES = igsl.lua base.lua integ.lua csv.lua
 
 ifeq ($(strip $(DEBUG)), yes)
   C_SRC_FILES += debug-support.c
@@ -71,18 +82,14 @@ ifeq ($(strip $(DEBUG)), yes)
   SUBDIRS_DEFS += -DGSL_SHELL_DEBUG
 endif
 
-ifeq ($(strip $(BUILD_LUA_DLL)), yes)
-  CFLAGS += -fpic
-  DEFS += -DLUA_MODULE -DUSE_SEPARATE_NAMESPACE
-  TARGETS = $(LUA_DLL)
-else
-  C_SRC_FILES += gsl-shell.c
-  SUBDIRS_DEFS += -DGSL_SHELL_LUA -DLUA_ROOT=$(PREFIX)
-  TARGETS = $(GSL_SHELL)
-endif
+C_SRC_FILES += gsl-shell.c
+SUBDIRS_DEFS += -DGSL_SHELL_LUA -DLUA_ROOT=$(PREFIX)
+TARGETS = $(GSL_SHELL)
 
 ifeq ($(strip $(ENABLE_AGG_PLOT)), yes)
-  C_SRC_FILES += refs.c object-index.c object-refs.c 
+  LUA_BASE_DIRS += pre3d
+  LUA_BASE_FILES += draw.lua contour.lua hpcontour.lua plcurve.lua plot3d.lua \
+		pre3d/pre3d.lua pre3d/pre3d_shape_utils.lua
   INCLUDES += $(PTHREADS_CFLAGS) -Iagg-plot
   SUBDIRS += agg-plot
   DEFS += -DAGG_PLOT_ENABLED
@@ -96,13 +103,7 @@ ifeq ($(strip $(DISABLE_GAMMA_CORR)), yes)
   SUBDIRS_DEFS += -DDISABLE_GAMMA_CORR
 endif
 
-ifeq ($(strip $(ENABLE_COMPLEX)), yes)
-  C_SRC_FILES += cmatrix.c cnlinfit.c code.c fft.c
-  DEFS += -DLNUM_COMPLEX
-  SUBDIRS_DEFS += -DLNUM_COMPLEX
-endif
-
-COMPILE = $(CC) --std=c99 $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
+COMPILE = $(CC) $(CFLAGS) $(LUA_CFLAGS) $(DEFS) $(INCLUDES)
 CXXCOMPILE = $(CXX) $(CXXFLAGS) -c
 
 LUAGSL_OBJ_FILES = $(C_SRC_FILES:%.c=%.o) $(CXX_SRC_FILES:%.cpp=%.o)
@@ -139,9 +140,12 @@ gsl.so: $(LUAGSL_OBJ_FILES) $(LUAGSL_LIBS)
 	ln -sf ./.libs/libluagsl.so $@
 
 install: gsl-shell
+	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	cp gsl-shell $(DESTDIR)$(PREFIX)/bin
+	strip $(DESTDIR)$(PREFIX)/bin/gsl-shell
 	mkdir -p $(DESTDIR)$(PREFIX)/lib/gsl-shell
-	cp igsl.lua base.lua integ.lua draw.lua $(DESTDIR)$(PREFIX)/lib/gsl-shell
+	mkdir -p $(LUA_BASE_DIRS) 
+	cp --parents $(LUA_BASE_FILES) $(DESTDIR)$(PREFIX)/lib/gsl-shell
 	mkdir -p $(DESTDIR)$(PREFIX)/lib/gsl-shell/examples
 	cp examples/*.lua $(DESTDIR)$(PREFIX)/lib/gsl-shell/examples
 
