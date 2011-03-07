@@ -1,0 +1,25 @@
+
+# if order % 2 == 0 then error 'Grauss-Kronrod order should be odd' end
+
+# eps_kronrod = 1e-10
+
+local kronrod = dofile('num/kronrod.lua')
+
+local function gauss_kronrod(n)
+   local m = floor((n+1) / 2)
+
+   local x, w1, w2 = kronrod(n, $(eps_kronrod))
+
+   local fmt1 = string.format('double[%i]', n+1)
+   local fmt2 = string.format('double[%i]', m)
+
+   local xgk = ffi.new(fmt1, x)
+   local wgk = ffi.new(fmt1, w1)
+   local wg  = ffi.new(fmt2)
+
+   for k = 0, m-1 do wg[k] = w2[2*k+2] end
+
+   return xgk, wgk, wg
+end
+
+local xgk, wgk, wg = gauss_kronrod($(half_order))

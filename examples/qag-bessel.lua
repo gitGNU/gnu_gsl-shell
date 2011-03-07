@@ -1,3 +1,5 @@
+local graph = graph or _G
+
 local template = require 'template'
 local qag = template.load('num/qag.lua.in', {limit=64, order=21})
 local qng = template.load('num/qng.lua.in', {})

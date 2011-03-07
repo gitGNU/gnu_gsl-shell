@@ -28,11 +28,11 @@
 # GSL_DBL_MIN     = 2.2250738585072014e-308
 # GSL_DBL_MAX     = 1.7976931348623157e+308
 
-local abs, min, max, pow = math.abs, math.min, math.max, math.pow
+local abs, min, max, pow, floor = math.abs, math.min, math.max, math.pow, math.floor
 
 local ffi = require "ffi"
 
-$(include 'num/gauss-kronrod-x-wgs.lua.in')
+$(include 'num/gauss-kronrod-x-wgs-calc.lua.in')
 
 local ws_size = 0
 local ws_nrmax
