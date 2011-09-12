@@ -20,6 +20,7 @@ enum gs_type_e {
   GS_RGBA_COLOR,
   GS_WINDOW,
   GS_PLOT,
+  GS_FOX_WINDOW,
   GS_INVALID_TYPE,
 };
 

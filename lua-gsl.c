@@ -32,6 +32,8 @@
 
 #include "lua-graph.h"
 
+extern void fox_window_register (lua_State *L);
+
 #ifdef GSL_SHELL_DEBUG
 static int gsl_shell_lua_registry (lua_State *L);
 #endif
@@ -64,6 +66,8 @@ luaopen_gsl (lua_State *L)
   pdf_register (L);
   cdf_register (L);
   sf_register (L);
+
+  fox_window_register (L);
 
   lua_pop (L, 1);
 
