@@ -5,7 +5,9 @@
 #include "fox_window.h"
 #include "gui-types.h"
 #include "gs-types.h"
-// #include "lua-cpp-utils.h"
+#include "lua-cpp-utils.h"
+#include "gsl-shell.h"
+#include "window_registry.h"
 
 __BEGIN_DECLS
 
@@ -35,6 +37,8 @@ long fox_app::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr)
   //  return me ? (this->* me->func)(sender,sel,ptr) : FXMainWindow::handle(sender,sel,ptr); 
 };
 
+typedef lua_thread_info<lua_fox_window> thread_info;
+
 int get_int_field (lua_State* L, const char* key)
 {
   lua_getfield(L, -1, key);
@@ -42,22 +46,6 @@ int get_int_field (lua_State* L, const char* key)
   lua_pop(L, 1);
   return result;
 }
-
-/*
-bool get_opt_int_field (lua_State* L, const char* key, int& value)
-{
-  lua_getfield(L, -1, key);
-
-  if (lua_isnumber(L, -1)) {
-    value = lua_tointeger(L, -1);
-    lua_pop(L, 1);
-    return true;
-  }
-
-  lua_pop(L, 1);
-  return false;
-}
-*/
 
 const char* get_string_field (lua_State* L, const char* key)
 {
@@ -178,11 +166,13 @@ int fox_window_new(lua_State* L)
       
     lua_pop(L, 1);
 
-    fox_app* app = new fox_app();
-    void* win_buf = gs_new_object(sizeof(fox_window), L, GS_FOX_WINDOW);
+    lua_fox_window* lwin = (lua_fox_window*) gs_new_object(sizeof(lua_fox_window), L, GS_FOX_WINDOW);
 
     lua_getfield(L, -2, "body");
-    fox_window* win = new(win_buf) fox_window(L, app, title, id, opts, width, height);
+
+    fox_app* app = new fox_app();
+    lwin->window = new fox_window(L, app, title, id, opts, width, height);
+
     lua_pop(L, 1);
 
     return 1;
@@ -193,24 +183,82 @@ int fox_window_new(lua_State* L)
 
 int fox_window_free(lua_State* L)
 {
-  fox_window* win = (fox_window*) gs_check_userdata (L, 1, GS_FOX_WINDOW);
-  win->~fox_window();
+  lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
+  fox_window* win = lwin->window;
+  FXApp* app = win->getApp();
+
+  if (lwin->status == lua_fox_window::not_ready || lwin->status == lua_fox_window::error)
+    delete app;
+
   return 0;
+}
+
+static void *
+fox_window_thread_function (void *_inf)
+{
+  thread_info* inf = (thread_info *) _inf;
+  lua_fox_window* lwin = inf->window;
+  fox_window* win = lwin->window;
+  FXApp* app = win->getApp();
+  int window_id = inf->window_id;
+  lua_State* L = inf->L;
+
+  delete inf;
+
+  int argc = 1;
+  char null[1] = {'\0'};
+  char *argv[1];
+
+  argv[0] = null;
+
+  // Open display
+  app->init(argc, argv);
+
+  lwin->status = lua_fox_window::running;
+
+  app->create();
+  win->show(PLACEMENT_SCREEN);
+  app->run();
+
+  GSL_SHELL_LOCK();
+  window_index_remove (L, window_id);
+  GSL_SHELL_UNLOCK();
+
+  lwin->status = lua_fox_window::closed;
+  delete app;
+
+  return NULL;
 }
 
 int fox_window_run(lua_State* L)
 {
-  fox_window* win = (fox_window*) gs_check_userdata (L, 1, GS_FOX_WINDOW);
-  FXApp* app = win->getApp();
+  lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
+  thread_info* inf = new thread_info(L, lwin);
 
-  int argc = 1;
-  char *argv[] = {"prova"};
+  lwin->status = lua_fox_window::starting;
 
-  // Open display
-  app->init(argc, argv);
-  app->create();
-  win->show(PLACEMENT_SCREEN);
-  app->run();
+  inf->window_id = window_index_add(L, 1);
+
+  pthread_attr_t attr[1];
+  pthread_t win_thread[1];
+
+  pthread_attr_init (attr);
+  pthread_attr_setdetachstate (attr, PTHREAD_CREATE_DETACHED);
+
+  void *user_data = (void *) inf;
+  if (pthread_create(win_thread, attr, fox_window_thread_function, user_data))
+    {
+      lwin->status = lua_fox_window::error; 
+      delete inf;
+      pthread_attr_destroy (attr);
+      window_index_remove (L, inf->window_id);
+      return luaL_error(L, "error during thread initialization");
+    }
+  else
+    {
+      pthread_attr_destroy (attr);
+    }
+
   return 0;
 }
 

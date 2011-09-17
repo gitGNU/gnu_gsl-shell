@@ -6,6 +6,7 @@
 #include "platform_support_ext.h"
 #include "agg_trans_affine.h"
 #include "agg_color_rgba.h"
+#include "lua-cpp-utils.h"
 
 extern "C" {
 #include "lua.h"
@@ -25,14 +26,7 @@ protected:
   agg::trans_affine m_matrix;
 
 public:
-
-  struct thread_info {
-    lua_State *L;
-    canvas_window *win;
-    int window_id;
-
-    thread_info (lua_State *L, canvas_window *win) : L(L), win(win) {};
-  };
+  typedef lua_thread_info<canvas_window> thread_info;
 
   enum win_status_e { not_ready, starting, running, error, closed };
 

@@ -86,4 +86,13 @@ T* object_check (lua_State *L, int index, enum gs_type_e tp)
   return (T *) gs_check_userdata (L, index, tp);
 }
 
+template <typename Window>
+struct lua_thread_info {
+  lua_State* L;
+  Window* window;
+  int window_id;
+
+  lua_thread_info(lua_State* L, Window* win) : L(L), window(win) {};
+};
+
 #endif

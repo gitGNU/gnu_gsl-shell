@@ -32,7 +32,7 @@ ifeq ($(HOST_SYS),Windows)
   INCLUDES += -I/usr/include # -I/usr/pthreads-w32/include
 endif
 
-INCLUDES += $(FOX_INCLUDES) -I$(GSH_BASE_DIR) -I$(LUADIR)/src
+INCLUDES += $(FOX_INCLUDES) -I$(GSH_BASE_DIR) -I$(GSH_BASE_DIR)/agg-plot -I$(LUADIR)/src
 
 FOXWIN_SRC_FILES = fox_window.cpp
 

@@ -23,7 +23,6 @@
 #include "resource-manager.h"
 #include "gsl-shell.h"
 #include "agg-parse-trans.h"
-#include "lua-cpp-utils.h"
 #include "lua-utils.h"
 #include "window_registry.h"
 #include "lua-draw.h"
@@ -92,7 +91,7 @@ canvas_thread_function (void *_inf)
 
   std::auto_ptr<thread_info> inf((thread_info *) _inf);
   platform_support_ext::prepare();
-  canvas_window *win = inf->win;
+  canvas_window *win = inf->window;
 
   win->caption("GSL shell plot");
   if (win->init(480, 480, agg::window_resize))
