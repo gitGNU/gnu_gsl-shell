@@ -4,7 +4,7 @@
 #include <fx.h>
 
 #include "defs.h"
-#include "dict.h"
+#include "fox_app.h"
 
 __BEGIN_DECLS
 
@@ -14,45 +14,6 @@ __BEGIN_DECLS
 extern void fox_window_register (lua_State *L);
 
 __END_DECLS
-
-class fox_app : public FXApp {
-public:
-  static const FX::FXMetaClass metaClass;
-
-  static FX::FXObject* manufacture() { return new fox_app; }
-
-  virtual long handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr);
-
-  virtual const FX::FXMetaClass* getMetaClass() const { return &metaClass; }
-
-  friend FX::FXStream& operator<<(FX::FXStream& store, const fox_app* obj) {
-    return store.saveObject((FX::FXObjectPtr)(obj)); 
-  }
-
-  friend FX::FXStream& operator>>(FX::FXStream& store, fox_app*& obj) {
-    return store.loadObject((FX::FXObjectPtr&)(obj));
-  }
-
-public:
-  fox_app() : FXApp("FOX App test") { }
-
-  void bind(int id, FXObject* obj) { m_objects.insert(id, obj); }
-  void map(const char* name, int id) { m_symbols.insert(name, id); }
-
-  FXObject* get_object_by_id(int id) {
-    FXObject* obj;
-    if (m_objects.search(id, obj))
-      return obj;
-    return NULL;
-  }
-
-private:
-  fox_app(const fox_app&);
-  fox_app &operator=(const fox_app&);
-
-  dict<int, FXObject*> m_objects;
-  dict<FXString, int> m_symbols;
-};
 
 class fox_window : public FXMainWindow {
 public:

@@ -28,15 +28,6 @@ static const struct luaL_Reg fox_window_methods[] = {
 
 __END_DECLS
 
-const FX::FXMetaClass fox_app::metaClass("fox_app", fox_app::manufacture, &FXApp::metaClass, NULL, 0, 0);
-
-long fox_app::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr)
-{ 
-  return FXApp::handle(sender, sel, ptr);
-  //  const FXMapEntry* me=(const FXMapEntry*)metaClass.search(sel);
-  //  return me ? (this->* me->func)(sender,sel,ptr) : FXMainWindow::handle(sender,sel,ptr); 
-};
-
 typedef lua_thread_info<lua_fox_window> thread_info;
 
 int get_int_field (lua_State* L, const char* key)
