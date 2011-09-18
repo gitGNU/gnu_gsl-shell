@@ -6,12 +6,12 @@
 #include "defs.h"
 #include "dict.h"
 
-// __BEGIN_DECLS
+__BEGIN_DECLS
 
-// #include "lua.h"
-// #include "lauxlib.h"
+#include "lua.h"
+#include "lauxlib.h"
 
-// __END_DECLS
+__END_DECLS
 
 class fox_app : public FXApp {
 public:
@@ -31,11 +31,22 @@ public:
     return store.loadObject((FX::FXObjectPtr&)(obj));
   }
 
-public:
-  fox_app() : FXApp("FOX App test") { }
+  fox_app() : FXApp("FOX App test"),  m_L(0), m_window_id(-1), m_env_handler_index(0) { }
 
   void bind(int id, FXObject* obj) { m_objects.insert(id, obj); }
   void map(const char* name, int id) { m_symbols.insert(name, id); }
+
+  int assign_handler(FX::FXuint sel);
+
+  void set_lua_state(lua_State* L, int window_id) { 
+    m_L = L;
+    m_window_id = window_id;
+  }
+
+  lua_State* get_lua_state(int& window_id) {
+    window_id = m_window_id;
+    return m_L;
+  }
 
   FXObject* get_object_by_id(int id) {
     FXObject* obj;
@@ -50,6 +61,12 @@ private:
 
   dict<int, FXObject*> m_objects;
   dict<FXString, int> m_symbols;
+
+  lua_State* m_L;
+  int m_window_id;
+
+  dict<FX::FXuint, int> m_sel_map;
+  int m_env_handler_index;
 };
 
 #endif

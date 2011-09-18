@@ -107,7 +107,33 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int id, in
 	lua_getfield(L, -1, "args");
 	const char* text = get_string_element(L, 1);
 	lua_pop(L, 1);
-	FXButton* b = new FXButton(parent, text);
+
+	FXuint id;
+	lua_getfield(L, -1, "handlers");
+	if (lua_istable(L, -1)) {
+	  int hn = lua_objlen(L, -1);
+	  for (int k = 1; k <= hn; k++) {
+	    lua_rawgeti(L, -1, k);
+
+	    lua_rawgeti(L, -1, 1);
+	    FXuint sel = lua_tointeger(L, -1);
+	    lua_pop(L, 1);
+
+	    lua_rawgeti(L, -1, 2);
+	    id = fox_app::ID_LAST + lua_tointeger(L, -1);
+	    lua_pop(L, 1);
+
+	    lua_rawgeti(L, -1, 3);
+	    int env_index = app->assign_handler(FXSEL(sel,id));
+	    // at this point the userdata's environment is at index = -6
+	    lua_rawseti(L, -6, env_index);
+
+	    lua_pop(L, 1);
+	  }
+	}
+	lua_pop(L, 1);
+
+	FXButton* b = new FXButton(parent, text, NULL, app, id);
 	printf("Adding button (id=%i) to object id= %i\n", id, parent_id);
 	app->bind(id, b);
 	break;
@@ -159,12 +185,14 @@ int fox_window_new(lua_State* L)
 
     lua_fox_window* lwin = (lua_fox_window*) gs_new_object(sizeof(lua_fox_window), L, GS_FOX_WINDOW);
 
-    lua_getfield(L, -2, "body");
+    lua_newtable(L);
+    lua_getfield(L, -3, "body");
 
     fox_app* app = new fox_app();
     lwin->window = new fox_window(L, app, title, id, opts, width, height);
 
     lua_pop(L, 1);
+    lua_setfenv(L, -2);
 
     return 1;
   }
@@ -187,14 +215,12 @@ int fox_window_free(lua_State* L)
 static void *
 fox_window_thread_function (void *_inf)
 {
-  thread_info* inf = (thread_info *) _inf;
-  lua_fox_window* lwin = inf->window;
+  lua_fox_window* lwin = (lua_fox_window*) _inf;
   fox_window* win = lwin->window;
-  FXApp* app = win->getApp();
-  int window_id = inf->window_id;
-  lua_State* L = inf->L;
+  fox_app* app = (fox_app*) win->getApp();
 
-  delete inf;
+  int window_id;
+  lua_State* L = app->get_lua_state(window_id);
 
   int argc = 1;
   char null[1] = {'\0'};
@@ -224,11 +250,14 @@ fox_window_thread_function (void *_inf)
 int fox_window_run(lua_State* L)
 {
   lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
-  thread_info* inf = new thread_info(L, lwin);
+  fox_window* win = lwin->window;
+  fox_app* app = (fox_app*) win->getApp();
 
   lwin->status = lua_fox_window::starting;
 
-  inf->window_id = window_index_add(L, 1);
+  int window_id = window_index_add(L, 1);
+
+  app->set_lua_state(L, window_id);
 
   pthread_attr_t attr[1];
   pthread_t win_thread[1];
@@ -236,13 +265,12 @@ int fox_window_run(lua_State* L)
   pthread_attr_init (attr);
   pthread_attr_setdetachstate (attr, PTHREAD_CREATE_DETACHED);
 
-  void *user_data = (void *) inf;
+  void *user_data = (void *) lwin;
   if (pthread_create(win_thread, attr, fox_window_thread_function, user_data))
     {
       lwin->status = lua_fox_window::error; 
-      delete inf;
       pthread_attr_destroy (attr);
-      window_index_remove (L, inf->window_id);
+      window_index_remove (L, window_id);
       return luaL_error(L, "error during thread initialization");
     }
   else

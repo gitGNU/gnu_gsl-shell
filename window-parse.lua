@@ -3,6 +3,7 @@ local bit = require 'bit'
 
 local LAYOUT = require 'fox-layout'
 local DECOR  = require 'fox-decor'
+local SEL    = require 'fox-selector'
 
 local GUI = {
    MAIN_WINDOW      = 0,
@@ -14,14 +15,6 @@ local GUI = {
    CANVAS           = 6,
 }
 
--- local current_element_id = 0
-
--- local function new_gui_entry (widget_id, )
---    local id = current_element_id
---    current_element_id = current_element_id + 1
---    return {id, widget_id, text, layout, style}
--- end
-
 local function parse_layout_options(opts)
    local r = 0
    for i, name in ipairs(opts) do
@@ -32,8 +25,6 @@ local function parse_layout_options(opts)
 end
 
 local current_element_id = 0
--- local ctor_list
--- local current_ctor
 
 local function get_element_id()
    local id = current_element_id
@@ -101,6 +92,9 @@ local function Button(spec)
       id = get_element_id(),
       args = { spec.text or "<Unspecified>" }
    }
+   if spec.onCommand then
+      ctor.handlers = {{SEL.COMMAND, ctor.id, spec.onCommand}}
+   end
    return { ctor }
 end
 
@@ -111,6 +105,11 @@ local function Canvas(spec)
       args = { }
    }
    return { ctor }
+end
+
+local function coucou(w)
+   echo('>>>', w) 
+   return 1
 end
 
 ctors = MainWindow {
@@ -131,7 +130,7 @@ ctors = MainWindow {
 
 	 Button {
 	    text = "Plot",
-	    onCommand = my_plot_function,
+	    onCommand = coucou,
 	 },	    
       },
 
