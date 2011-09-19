@@ -103,6 +103,7 @@ $(SUBDIRS):
 clean:
 	$(MAKE) -C agg-plot clean
 	$(MAKE) -C $(LUADIR) clean
+	$(MAKE) -C fox clean
 	$(HOST_RM) *.o $(TARGETS)
 	$(HOST_RM) -r ./.libs/
 
