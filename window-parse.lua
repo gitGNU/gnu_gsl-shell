@@ -93,7 +93,9 @@ local function Button(spec)
       args = { spec.text or "<Unspecified>" }
    }
    if spec.onCommand then
-      ctor.handlers = {{SEL.COMMAND, ctor.id, spec.onCommand}}
+      local hs = {id = ctor.id}
+      hs[#hs+1] = {SEL.COMMAND, spec.onCommand}
+      ctor.handlers = hs
    end
    return { ctor }
 end

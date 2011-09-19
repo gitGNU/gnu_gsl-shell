@@ -62,6 +62,36 @@ const char* get_string_element (lua_State* L, int index)
   return result;
 }
 
+// unpack the table on top of the stack to assign the handlers:
+// SEL => (envinronment index)
+FX::FXuint parse_handlers(lua_State* L, int env_table_index, fox_app* app)
+{
+  FX::FXuint id;
+
+  assert (lua_istable(L, -1));
+
+  lua_getfield(L, -1, "id");
+  id = fox_app::ID_LAST + lua_tointeger(L, -1);
+  lua_pop(L, 1);
+
+  int hn = lua_objlen(L, -1);
+  for (int k = 1; k <= hn; k++) {
+    lua_rawgeti(L, -1, k);
+
+    lua_rawgeti(L, -1, 1);
+    FX::FXuint sel = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    lua_rawgeti(L, -1, 2);
+    int env_index = app->assign_handler(FXSEL(sel,id));
+    lua_rawseti(L, env_table_index, env_index);
+
+    lua_pop(L, 1);
+  }
+
+  return id;
+}
+
 fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int id, int opts, int w, int h)
   : FXMainWindow(app, title, NULL, NULL, opts, 0, 0, w, h)
 {
@@ -108,29 +138,9 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int id, in
 	const char* text = get_string_element(L, 1);
 	lua_pop(L, 1);
 
-	FXuint id;
 	lua_getfield(L, -1, "handlers");
-	if (lua_istable(L, -1)) {
-	  int hn = lua_objlen(L, -1);
-	  for (int k = 1; k <= hn; k++) {
-	    lua_rawgeti(L, -1, k);
-
-	    lua_rawgeti(L, -1, 1);
-	    FXuint sel = lua_tointeger(L, -1);
-	    lua_pop(L, 1);
-
-	    lua_rawgeti(L, -1, 2);
-	    id = fox_app::ID_LAST + lua_tointeger(L, -1);
-	    lua_pop(L, 1);
-
-	    lua_rawgeti(L, -1, 3);
-	    int env_index = app->assign_handler(FXSEL(sel,id));
-	    // at this point the userdata's environment is at index = -6
-	    lua_rawseti(L, -6, env_index);
-
-	    lua_pop(L, 1);
-	  }
-	}
+	// the fenv table shoulb be at index position 3
+ 	FXuint id = parse_handlers(L, 3, app);
 	lua_pop(L, 1);
 
 	FXButton* b = new FXButton(parent, text, NULL, app, id);
