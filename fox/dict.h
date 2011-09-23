@@ -16,6 +16,8 @@ class dict {
   list<pair>* m_map;
 
 public:
+  typedef list<pair> iterator;
+
   dict() : m_map(0) {}
 
   ~dict() { list<pair>::free(m_map); }
@@ -35,6 +37,11 @@ public:
       }
     return false;
   }
+
+  list<pair>* start() { return m_map; }
+
+  // the user should check himself if p is not null
+  list<pair>* next(list<pair>* p) { return p->next(); }
 };
 
 #endif
