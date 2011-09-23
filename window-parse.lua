@@ -58,40 +58,35 @@ local function MainWindow(spec)
    return ctor
 end
 
+local function base_ctor(type_id, spec)
+   return { type_id = type_id,
+	    id      = get_element_id(),
+	    name    = spec.name }
+end
+      
+
 local function VerticalFrame(spec)
-   local ctor = {
-      type_id = GUI.VERTICAL_FRAME,
-      id = get_element_id(),
-      args = { parse_layout_options(spec.layout) }
-   }
+   local ctor = base_ctor(GUI.VERTICAL_FRAME, spec)
+   ctor.args = { parse_layout_options(spec.layout) }
    return parse_childs(ctor, ctor.id, spec)
 end
 
 
 local function HorizontalFrame(spec)
-   local ctor = {
-      type_id = GUI.HORIZONTAL_FRAME,
-      id = get_element_id(),
-      args = { parse_layout_options(spec.layout) }
-   }
+   local ctor = base_ctor(GUI.HORIZONTAL_FRAME, spec)
+   ctor.args = { parse_layout_options(spec.layout) }
    return parse_childs(ctor, ctor.id, spec)
 end
 
 local function TextField(spec)
-   local ctor = {
-      type_id = GUI.TEXT_FIELD,
-      id = get_element_id(),
-      args = { spec.columns or 12 }
-   }
+   local ctor = base_ctor(GUI.TEXT_FIELD, spec)
+   ctor.args = { spec.columns or 12 }
    return { ctor }
 end
 
 local function Button(spec)
-   local ctor = {
-      type_id = GUI.BUTTON,
-      id = get_element_id(),
-      args = { spec.text or "<Unspecified>" }
-   }
+   local ctor = base_ctor(GUI.BUTTON, spec)
+   ctor.args = { spec.text or "<Unspecified>" }
    if spec.onCommand then
       local hs = {id = ctor.id}
       hs[#hs+1] = {SEL.COMMAND, spec.onCommand}
@@ -101,15 +96,15 @@ local function Button(spec)
 end
 
 local function Canvas(spec)
-   local ctor = {
-      type_id = GUI.CANVAS,
-      id = get_element_id(),
-      args = { }
-   }
+   local ctor = base_ctor(GUI.CANVAS, spec)
+   ctor.args = { }
    return { ctor }
 end
 
 local function coucou(w)
+   local id = w:element('plot_tf')
+   local txt = w:handle(id, 'get_text')
+   w:handle(id, 'set_text', txt .. 'coucou')
    echo('>>>', w) 
    return 1
 end
@@ -126,6 +121,7 @@ ctors = MainWindow {
 	 layout = {'FILL_X'},
 
 	 TextField {
+	    name = 'plot_tf',
 	    columns = 24,
 --	    onCommand = my_on_command,
 	 },

@@ -8,12 +8,15 @@
 #include "lua-cpp-utils.h"
 #include "gsl-shell.h"
 #include "window_registry.h"
+#include "gui_element.h"
 
 __BEGIN_DECLS
 
 static int fox_window_run(lua_State* L);
 static int fox_window_new(lua_State* L);
 static int fox_window_free(lua_State* L);
+static int fox_window_get_element(lua_State* L);
+static int fox_window_handle_msg(lua_State* L);
 
 static const struct luaL_Reg fox_window_functions[] = {
   {"fox_window", fox_window_new},
@@ -22,6 +25,8 @@ static const struct luaL_Reg fox_window_functions[] = {
 
 static const struct luaL_Reg fox_window_methods[] = {
   {"run",       fox_window_run},
+  {"element",   fox_window_get_element},
+  {"handle",    fox_window_handle_msg},
   {"__gc",      fox_window_free},
   {NULL, NULL}
 };
@@ -95,7 +100,10 @@ FX::FXuint parse_handlers(lua_State* L, int env_table_index, fox_app* app)
 fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int id, int opts, int w, int h)
   : FXMainWindow(app, title, NULL, NULL, opts, 0, 0, w, h)
 {
-  app->bind(id, this);
+  /* position in the Lua stack of the environment table for the window */
+  const int env_table_index = 3;
+
+  app->bind(id, new fake_element<fox_window>(this));
 
   int n = lua_objlen(L, -1);
 
@@ -111,6 +119,8 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int id, in
 
     assert(parent);
 
+    gui_element* elem;
+
     switch (type_id) {
     case gui::horizontal_frame: 
       {
@@ -118,8 +128,8 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int id, in
 	int opts = get_int_element(L, 1);
 	lua_pop(L, 1);
 	FXHorizontalFrame* hf = new FXHorizontalFrame(parent, opts);
+	elem = new fake_element<FXHorizontalFrame>(hf);
 	printf("Adding horizontal frame (id=%i) to object id= %i\n", id, parent_id);
-	app->bind(id, hf);
 	break;
       }
     case gui::vertical_frame: 
@@ -128,8 +138,8 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int id, in
 	int opts = get_int_element(L, 1);
 	lua_pop(L, 1);
 	FXVerticalFrame* hf = new FXVerticalFrame(parent, opts);
+	elem = new fake_element<FXVerticalFrame>(hf);
 	printf("Adding vertical frame (id=%i) to object id= %i\n", id, parent_id);
-	app->bind(id, hf);
 	break;
       }
     case gui::button:
@@ -139,13 +149,12 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int id, in
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "handlers");
-	// the fenv table shoulb be at index position 3
- 	FXuint id = parse_handlers(L, 3, app);
+ 	FXuint id = parse_handlers(L, env_table_index, app);
 	lua_pop(L, 1);
 
 	FXButton* b = new FXButton(parent, text, NULL, app, id);
+	elem = new fake_element<FXButton>(b);
 	printf("Adding button (id=%i) to object id= %i\n", id, parent_id);
-	app->bind(id, b);
 	break;
       }
     case gui::text_field:
@@ -154,20 +163,22 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int id, in
 	int columns = get_int_element(L, 1);
 	lua_pop(L, 1);
 	FXTextField* tf = new FXTextField(parent, columns);
+	elem = new text_field(tf);
 	printf("Adding text field (id=%i) to object id= %i\n", id, parent_id);
-	app->bind(id, tf);
 	break;
       }
     case gui::canvas:
       {
 	FXCanvas* canvas = new FXCanvas(parent);
+	elem = new fake_element<FXCanvas>(canvas);
 	printf("Adding canvas (id=%i) to object id= %i\n", id, parent_id);
-	app->bind(id, canvas);
 	break;
       }
     default:
       luaL_error(L, "unknown type_id code: %i", type_id);
     }
+
+    app->bind(id, elem);
 
     if (name) app->map(name, id);
 
@@ -289,6 +300,40 @@ int fox_window_run(lua_State* L)
     }
 
   return 0;
+}
+
+int fox_window_get_element(lua_State* L)
+{
+  lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
+  const char* key = lua_tostring(L, 2);
+
+  int id;
+  if (lwin->app()->lookup_name(key, id)) {
+    lua_pushinteger(L, id);
+    return 1;
+  }
+
+  return 0;
+}
+
+int fox_window_handle_msg(lua_State* L)
+{
+  lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
+  int id = luaL_checkinteger(L, 2);
+
+  gui_element* elem = lwin->app()->lookup(id);
+
+  if (!elem)
+    return luaL_error(L, "invalid element id: %i in handle method", id);
+
+  gslshell::ret_status st;
+  int n = elem->lua_call(L, st);
+
+  if (st.error_msg()) {
+    return luaL_error(L, "%s in %s\n", st.error_msg(), st.context());
+  }
+
+  return n;
 }
 
 void

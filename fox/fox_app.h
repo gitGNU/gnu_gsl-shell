@@ -5,6 +5,7 @@
 
 #include "defs.h"
 #include "dict.h"
+#include "gui_element.h"
 
 __BEGIN_DECLS
 
@@ -33,8 +34,18 @@ public:
 
   fox_app() : FXApp("FOX App test"),  m_L(0), m_window_id(-1), m_env_handler_index(0) { }
 
-  void bind(int id, FXObject* obj) { m_objects.insert(id, obj); }
+  void bind(int id, gui_element* obj) { m_objects.insert(id, obj); }
   void map(const char* name, int id) { m_symbols.insert(name, id); }
+
+  gui_element* lookup(int id) {
+    gui_element* elem;
+    if (m_objects.search(id, elem)) {
+      return elem;
+    }
+    return NULL;
+  }
+
+  bool lookup_name(const char *name, int& id) { return m_symbols.search(name, id); }
 
   int assign_handler(FX::FXuint sel);
 
@@ -49,9 +60,10 @@ public:
   }
 
   FXObject* get_object_by_id(int id) {
-    FXObject* obj;
-    if (m_objects.search(id, obj))
-      return obj;
+    gui_element* elem;
+    if (m_objects.search(id, elem)) {
+      return elem->content();
+    }
     return NULL;
   }
 
@@ -59,7 +71,7 @@ private:
   fox_app(const fox_app&);
   fox_app &operator=(const fox_app&);
 
-  dict<int, FXObject*> m_objects;
+  dict<int, gui_element*> m_objects;
   dict<FXString, int> m_symbols;
 
   lua_State* m_L;

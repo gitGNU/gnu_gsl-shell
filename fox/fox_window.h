@@ -25,6 +25,8 @@ struct lua_fox_window {
 
   lua_fox_window() : status(not_ready), window(0) {}
 
+  fox_app* app() { return (fox_app*) window->getApp(); }
+
   enum win_status_e status;
   fox_window* window;
 };

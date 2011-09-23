@@ -34,7 +34,7 @@ endif
 
 INCLUDES += $(FOX_INCLUDES) -I$(GSH_BASE_DIR) -I$(GSH_BASE_DIR)/agg-plot -I$(LUADIR)/src
 
-FOXWIN_SRC_FILES = fox_app.cpp fox_window.cpp 
+FOXWIN_SRC_FILES = fox_app.cpp fox_window.cpp gui_element.cpp
 
 FOXWIN_OBJ_FILES := $(FOXWIN_SRC_FILES:%.cpp=%.o)
 
