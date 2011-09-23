@@ -326,14 +326,19 @@ int fox_window_handle_msg(lua_State* L)
   if (!elem)
     return luaL_error(L, "invalid element id: %i in handle method", id);
 
-  gslshell::ret_status st;
-  int n = elem->lua_call(L, st);
+  if (lwin->status == lua_fox_window::running)
+    {
+      gslshell::ret_status st;
+      int n = elem->lua_call(L, st);
 
-  if (st.error_msg()) {
-    return luaL_error(L, "%s in %s\n", st.error_msg(), st.context());
-  }
+      if (st.error_msg()) {
+	return luaL_error(L, "%s in %s\n", st.error_msg(), st.context());
+      }
 
-  return n;
+      return n;
+    }
+
+  return luaL_error(L, "window is not running");
 }
 
 void
