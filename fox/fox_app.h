@@ -34,6 +34,14 @@ public:
 
   fox_app() : FXApp("FOX App test"),  m_L(0), m_window_id(-1), m_env_handler_index(0) { }
 
+  ~fox_app() {
+    typedef dict<int, gui_element*> obj_dict;
+    for (obj_dict::iterator* p = m_objects.start(); p; p = m_objects.next(p)) {
+      gui_element* obj = p->content().value;
+      delete obj;
+    }
+  }
+
   void bind(int id, gui_element* obj) { m_objects.insert(id, obj); }
   void map(const char* name, int id) { m_symbols.insert(name, id); }
 

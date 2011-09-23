@@ -20,15 +20,27 @@ public:
   fox_window(lua_State* L, fox_app* app, const char* title, int id, int opts, int w, int h);
 };
 
-struct lua_fox_window {
+class lua_fox_window {
+public:
   enum win_status_e { not_ready, starting, running, error, closed };
 
-  lua_fox_window() : status(not_ready), window(0) {}
+  lua_fox_window() : status(not_ready), m_app(0), m_window(0) {}
 
-  fox_app* app() { return (fox_app*) window->getApp(); }
+  ~lua_fox_window();
+
+  void init(fox_app* app, fox_window* win) {
+    m_app = app;
+    m_window = win;
+  }
+
+  fox_app*    app()    { return m_app; }
+  fox_window* window() { return m_window; }
 
   enum win_status_e status;
-  fox_window* window;
+
+private:
+  fox_app* m_app;
+  fox_window* m_window;
 };
 
 #endif

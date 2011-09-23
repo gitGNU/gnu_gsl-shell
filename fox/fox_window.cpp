@@ -186,6 +186,12 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int id, in
   }
 }
 
+lua_fox_window::~lua_fox_window()
+{
+  if (status == not_ready || status == error)
+    delete m_app;
+}
+
 int fox_window_new(lua_State* L)
 {
   int type_id = get_int_field(L, "type_id");
@@ -210,7 +216,9 @@ int fox_window_new(lua_State* L)
     lua_getfield(L, -3, "body");
 
     fox_app* app = new fox_app();
-    lwin->window = new fox_window(L, app, title, id, opts, width, height);
+    fox_window* win = new fox_window(L, app, title, id, opts, width, height);
+
+    lwin->init(app, win);
 
     lua_pop(L, 1);
     lua_setfenv(L, -2);
@@ -224,12 +232,7 @@ int fox_window_new(lua_State* L)
 int fox_window_free(lua_State* L)
 {
   lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
-  fox_window* win = lwin->window;
-  FXApp* app = win->getApp();
-
-  if (lwin->status == lua_fox_window::not_ready || lwin->status == lua_fox_window::error)
-    delete app;
-
+  lwin->~lua_fox_window();
   return 0;
 }
 
@@ -237,8 +240,8 @@ static void *
 fox_window_thread_function (void *_inf)
 {
   lua_fox_window* lwin = (lua_fox_window*) _inf;
-  fox_window* win = lwin->window;
-  fox_app* app = (fox_app*) win->getApp();
+  fox_window* win = lwin->window();
+  fox_app* app = lwin->app();
 
   int window_id;
   lua_State* L = app->get_lua_state(window_id);
@@ -271,8 +274,7 @@ fox_window_thread_function (void *_inf)
 int fox_window_run(lua_State* L)
 {
   lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
-  fox_window* win = lwin->window;
-  fox_app* app = (fox_app*) win->getApp();
+  fox_app* app = lwin->app();
 
   lwin->status = lua_fox_window::starting;
 
