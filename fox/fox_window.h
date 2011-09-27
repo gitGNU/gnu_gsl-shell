@@ -18,6 +18,8 @@ __END_DECLS
 class fox_window : public FXMainWindow {
 public:
   fox_window(lua_State* L, fox_app* app, const char* title, int id, int opts, int w, int h);
+
+  virtual void create();
 };
 
 class lua_fox_window {
@@ -41,6 +43,14 @@ public:
 private:
   fox_app* m_app;
   fox_window* m_window;
+};
+
+namespace dc_operation {
+  enum dc_oper_e {
+    set_foreground = 1,
+    draw_line      = 2,
+    fill_rectangle = 3,
+  };
 };
 
 #endif

@@ -32,7 +32,10 @@ public:
     return store.loadObject((FX::FXObjectPtr&)(obj));
   }
 
-  fox_app() : FXApp("FOX App test"),  m_L(0), m_window_id(-1), m_env_handler_index(0) { }
+  fox_app() : FXApp("FOX App test"),
+	      m_L(0), m_window_id(-1), m_env_handler_index(0),
+	      m_current_event(0), m_current_dc(0)
+  { }
 
   ~fox_app() {
     typedef dict<int, gui_element*> obj_dict;
@@ -40,10 +43,19 @@ public:
       gui_element* obj = p->content().value;
       delete obj;
     }
+    delete m_current_dc;
   }
 
   void bind(int id, gui_element* obj) { m_objects.insert(id, obj); }
   void map(const char* name, int id) { m_symbols.insert(name, id); }
+
+  FXEvent* event() { return m_current_event; }
+
+  void set_dc(FXDrawable* w);
+
+  FXDCWindow* current_dc() { return m_current_dc; }
+
+  void close_handler_call();
 
   gui_element* lookup(int id) {
     gui_element* elem;
@@ -67,12 +79,9 @@ public:
     return m_L;
   }
 
-  FXObject* get_object_by_id(int id) {
-    gui_element* elem;
-    if (m_objects.search(id, elem)) {
-      return elem->content();
-    }
-    return NULL;
+  FXDrawable* get_object_by_id(int id) {
+    gui_element* elem = lookup(id);
+    return (elem ? elem->content() : 0);
   }
 
 private:
@@ -87,6 +96,9 @@ private:
 
   dict<FX::FXuint, int> m_sel_map;
   int m_env_handler_index;
+
+  FXEvent* m_current_event;
+  FXDCWindow* m_current_dc;
 };
 
 #endif

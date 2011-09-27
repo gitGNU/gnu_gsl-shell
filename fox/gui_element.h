@@ -14,43 +14,40 @@ __END_DECLS
 
 template <typename Fox_object>
 struct gui_element_gen {
-  virtual int lua_call(lua_State* L, gslshell::ret_status& st) = 0;
+  virtual int handle(lua_State* L, gslshell::ret_status& st) = 0;
   virtual Fox_object* content() = 0;
   virtual ~gui_element_gen() { };
 };
 
-typedef gui_element_gen<FX::FXObject> gui_element;
+typedef gui_element_gen<FX::FXDrawable> gui_element;
 
-class text_field : public gui_element {
+template <typename Fox_widget>
+class fox_gui_element : public gui_element {
 public:
-  text_field(FXTextField* tf) : m_text_field(tf) { }
+  fox_gui_element(Fox_widget* w) : m_widget(w) { }
 
-  FXTextField* operator->() { return m_text_field; }
+  Fox_widget* operator->()      { return m_widget; }
+  virtual FXDrawable* content() { return m_widget; };
 
-  virtual int lua_call(lua_State* L, gslshell::ret_status& st);
-  virtual FXObject* content() { return m_text_field; };
+  virtual int handle(lua_State* L, gslshell::ret_status& st) {
+    return not_implemented(st); 
+  }
 
 private:
-  FXTextField* m_text_field;
-};
-
-
-template <typename Fox_element>
-class fake_element : public gui_element {
-public:
-  fake_element(Fox_element* obj) : m_object(obj) { }
-
-  Fox_element* operator->() { return m_object; }
-
-  virtual int lua_call(lua_State* L, gslshell::ret_status& st) {
+  int not_implemented(gslshell::ret_status& st) {
     st.error("not implemented", "gui element method");
     return 0;
   }
 
-  virtual FXObject* content() { return m_object; };
+protected:
+  Fox_widget* m_widget;
+};
 
-private:
-  Fox_element* m_object;
+class text_field : public fox_gui_element<FXTextField> {
+public:
+  text_field(FXTextField* tf) : fox_gui_element<FXTextField>(tf) { }
+
+  virtual int handle(lua_State* L, gslshell::ret_status& st);
 };
 
 #endif

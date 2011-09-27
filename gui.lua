@@ -51,6 +51,32 @@ local function parse_childs(ctor, parent_id, spec)
    return ctors
 end
 
+local handler_table = {
+   onCommand           = SEL.COMMAND,
+   onPaint             = SEL.PAINT,
+   onLeftButtonPress   = SEL.LEFTBUTTONPRESS,
+   onLeftButtonRelease = SEL.LEFTBUTTONRELEASE,
+   onMotion            = SEL.MOTION,
+}
+
+local function parse_handlers(spec, id)
+   local hs = {id= id}
+   for k, v in pairs(spec) do
+      local sel = handler_table[k]
+      if sel then hs[#hs+1] = {sel, v} end
+   end
+   return #hs > 0 and hs or 0
+end
+
+local function base_ctor(type_id, spec)
+   local id = get_element_id()
+   local handlers = parse_handlers(spec, id)
+   return { type_id  = type_id,
+	    id       = id,
+	    name     = spec.name,
+	    handlers = handlers }
+end
+
 function M.MainWindow(spec)
    local w, h = spec.width or 800, spec.height or 600
    local ctor = { 
@@ -61,13 +87,6 @@ function M.MainWindow(spec)
    ctor.body = parse_childs(nil, ctor.id, spec)
    return ctor
 end
-
-local function base_ctor(type_id, spec)
-   return { type_id = type_id,
-	    id      = get_element_id(),
-	    name    = spec.name }
-end
-      
 
 function M.VerticalFrame(spec)
    local ctor = base_ctor(GUI.VERTICAL_FRAME, spec)
@@ -88,20 +107,22 @@ function M.TextField(spec)
    return { ctor }
 end
 
+function M.Label(spec)
+   local ctor = base_ctor(GUI.LABEL, spec)
+   ctor.args = { spec.text or '<Unspecified>' }
+   return { ctor }
+end
+
 function M.Button(spec)
    local ctor = base_ctor(GUI.BUTTON, spec)
    ctor.args = { spec.text or "<Unspecified>" }
-   if spec.onCommand then
-      local hs = {id = ctor.id}
-      hs[#hs+1] = {SEL.COMMAND, spec.onCommand}
-      ctor.handlers = hs
-   end
    return { ctor }
 end
 
 function M.Canvas(spec)
    local ctor = base_ctor(GUI.CANVAS, spec)
-   ctor.args = { }
+   local layout = parse_layout_options(spec.layout)
+   ctor.args = { layout }
    return { ctor }
 end
 

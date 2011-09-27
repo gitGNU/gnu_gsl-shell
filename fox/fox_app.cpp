@@ -9,21 +9,50 @@ long fox_app::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr)
   int env_index;
 
   if (m_sel_map.search(sel, env_index)) {
+
+    FXuint seltp = FXSELTYPE(sel);
+    if (seltp == FX::SEL_PAINT || seltp == FX::SEL_MOTION) {
+      m_current_event = (FXEvent*) ptr;
+    }
+
     GSL_SHELL_LOCK();
     lua_State* L = m_L;
     window_index_get(L, m_window_id);
     lua_getfenv(L, -1);
     lua_rawgeti(L, -1, env_index);
     lua_pushvalue(L, 1);
-    lua_call(L, 1, 1);
-    int status = lua_tointeger(L, -1);
-    lua_pop(L, 3);
+
+    int err = lua_pcall(L, 1, 0, 0);
+
+    if (err != 0) {
+      const char* msg = lua_tostring(L, -1);
+      fprintf(stderr, "error in callback function: %s", msg);
+      lua_pop(L, 3);
+    } else {
+      lua_pop(L, 2);
+    }
+
+    close_handler_call();
+
     GSL_SHELL_UNLOCK();
-    return status;
+    return (err == 0 ? 1 : 0);
   }
 
   return FXApp::handle(sender, sel, ptr);
 };
+
+void fox_app::set_dc(FXDrawable* w)
+{
+  delete m_current_dc;
+  m_current_dc = new FXDCWindow(w);
+}
+
+void fox_app::close_handler_call()
+{
+  m_current_event = 0;
+  delete m_current_dc;
+  m_current_dc = 0;
+}
 
 int fox_app::assign_handler(FX::FXuint sel)
 {
