@@ -3,6 +3,7 @@ local bit = require 'bit'
 
 local LAYOUT = require 'fox-layout'
 local DECOR  = require 'fox-decor'
+local FRAME  = require 'fox-frame'
 local SEL    = require 'fox-selector'
 
 local create = gsl.fox_window
@@ -19,13 +20,20 @@ local GUI = {
    CANVAS           = 6,
 }
 
-local function parse_layout_options(opts)
+local function parse_gen_options(table, opts)
+   if not opts then return 0 end
    local r = 0
    for i, name in ipairs(opts) do
-      local x = LAYOUT[name]
+      local x = table[name]
       r = bit.bor(r, x)
    end
    return r
+end
+
+local function parse_options(spec)
+   local lay_opts = parse_gen_options(LAYOUT, spec.layout)
+   local sty_opts = parse_gen_options(FRAME,  spec.style)
+   return bit.bor(lay_opts, sty_opts)
 end
 
 local current_element_id = 0
@@ -90,14 +98,14 @@ end
 
 function M.VerticalFrame(spec)
    local ctor = base_ctor(GUI.VERTICAL_FRAME, spec)
-   ctor.args = { parse_layout_options(spec.layout) }
+   ctor.args = { parse_options(spec) }
    return parse_childs(ctor, ctor.id, spec)
 end
 
 
 function M.HorizontalFrame(spec)
    local ctor = base_ctor(GUI.HORIZONTAL_FRAME, spec)
-   ctor.args = { parse_layout_options(spec.layout) }
+   ctor.args = { parse_options(spec) }
    return parse_childs(ctor, ctor.id, spec)
 end
 
@@ -121,8 +129,7 @@ end
 
 function M.Canvas(spec)
    local ctor = base_ctor(GUI.CANVAS, spec)
-   local layout = parse_layout_options(spec.layout)
-   ctor.args = { layout }
+   ctor.args = { parse_options(spec) }
    return { ctor }
 end
 

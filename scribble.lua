@@ -39,9 +39,8 @@ ctors = UI.MainWindow {
       layout = {'SIDE_TOP', 'FILL_X', 'FILL_Y'},
 
       UI.VerticalFrame {
-	 position = 'TOP/LEFT',
-	 layout = {'FILL_X', 'FILL_Y'},
-	 style = 'SUNKEN',
+	 layout = {'FILL_X', 'FILL_Y', 'TOP', 'LEFT'},
+	 style = {'SUNKEN'},
 	 
 	 UI.Label {
 	    layout = {'FILL_X'},
@@ -51,7 +50,7 @@ ctors = UI.MainWindow {
 	 UI.Canvas {
 	    name = 'canvas',
 	    layout = {'FILL_X', 'FILL_Y', 'FILL_COLUMN', 'FILL_ROW'},
-	    style = 'SUNKEN',
+	    style = {'SUNKEN'},
 	    onPaint = do_paint,
 	    onLeftButtonPress = on_press,
 	    onLeftButtonRelease = on_release,
@@ -62,7 +61,7 @@ ctors = UI.MainWindow {
       UI.VerticalFrame {
 	 position = 'TOP/LEFT',
 	 layout = {'FILL_Y'},
-	 style = 'SUNKEN',
+	 style = {'SUNKEN'},
 	 
 	 UI.Label {
 	    layout = {'FILL_X'},
