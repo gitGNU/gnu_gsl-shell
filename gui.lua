@@ -68,7 +68,7 @@ local handler_table = {
 }
 
 local function parse_handlers(spec, id)
-   local hs = {id= id}
+   local hs = { }
    for k, v in pairs(spec) do
       local sel = handler_table[k]
       if sel then hs[#hs+1] = {sel, v} end

@@ -77,16 +77,12 @@ const char* get_string_element (lua_State* L, int index)
 
 // unpack the table on top of the stack to assign the handlers:
 // SEL => (envinronment index)
-int parse_handlers(lua_State* L, int env_table_index, fox_app* app)
+int parse_handlers(lua_State* L, int env_table_index, fox_app* app, int id)
 {
   if (!lua_istable(L, -1))
     return (-1);
 
-  lua_getfield(L, -1, "id");
-  int s_id = lua_tointeger(L, -1);
-  lua_pop(L, 1);
-
-  FX::FXuint id = fox_app::ID_LAST + s_id;
+  FX::FXuint fox_id = fox_app::ID_LAST + id;
 
   int hn = lua_objlen(L, -1);
   for (int k = 1; k <= hn; k++) {
@@ -99,13 +95,13 @@ int parse_handlers(lua_State* L, int env_table_index, fox_app* app)
     printf("Assigning handler #%i, selector: (%u, %u)\n", k, sel, id);
 
     lua_rawgeti(L, -1, 2);
-    int env_index = app->assign_handler(FXSEL(sel,id));
+    int env_index = app->assign_handler(FXSEL(sel,fox_id));
     lua_rawseti(L, env_table_index, env_index);
 
     lua_pop(L, 1);
   }
 
-  return (int) id;
+  return (int) fox_id;
 }
 
 fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int win_id, int opts, int w, int h)
@@ -161,15 +157,10 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int win_id
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "handlers");
- 	int id = parse_handlers(L, env_table_index, app);
+ 	int hid = parse_handlers(L, env_table_index, app, id);
 	lua_pop(L, 1);
 
-	FXButton* b;
-	if (id >= 0) {
-	  b = new FXButton(parent, text, NULL, app, id);
-	} else {
-	  b = new FXButton(parent, text, NULL);
-	}
+	FXButton* b = new FXButton(parent, text, NULL, hid >= 0 ? app : 0, hid);
 
 	elem = new fox_gui_element<FXButton>(b);
 	printf("Adding button (id=%i) to object id= %i\n", id, parent_id);
@@ -201,10 +192,10 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int win_id
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "handlers");
- 	int id = parse_handlers(L, env_table_index, app);
+ 	int hid = parse_handlers(L, env_table_index, app, id);
 	lua_pop(L, 1);
 
-	FXCanvas* canvas = new FXCanvas(parent, id >= 0 ? app : NULL, id, opts);
+	FXCanvas* canvas = new FXCanvas(parent, id >= 0 ? app : NULL, hid, opts);
 	elem = new fox_gui_element<FXCanvas>(canvas);
 	printf("Adding canvas (id=%i) to object id= %i\n", id, parent_id);
 	break;
