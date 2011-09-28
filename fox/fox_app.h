@@ -33,7 +33,7 @@ public:
   }
 
   fox_app() : FXApp("FOX App test"),
-	      m_L(0), m_window_id(-1), m_env_handler_index(0),
+	      m_L(0), m_thread_id(-1), m_env_handler_index(0),
 	      m_current_event(0), m_current_dc(0)
   { }
 
@@ -69,13 +69,13 @@ public:
 
   int assign_handler(FX::FXuint sel);
 
-  void set_lua_state(lua_State* L, int window_id) { 
+  void set_lua_state(lua_State* L, int thread_id) { 
     m_L = L;
-    m_window_id = window_id;
+    m_thread_id = thread_id;
   }
 
-  lua_State* get_lua_state(int& window_id) {
-    window_id = m_window_id;
+  lua_State* get_lua_state(int& thread_id) {
+    thread_id = m_thread_id;
     return m_L;
   }
 
@@ -92,7 +92,7 @@ private:
   dict<FXString, int> m_symbols;
 
   lua_State* m_L;
-  int m_window_id;
+  int m_thread_id;
 
   dict<FX::FXuint, int> m_sel_map;
   int m_env_handler_index;

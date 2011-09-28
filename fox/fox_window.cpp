@@ -280,8 +280,8 @@ fox_window_thread_function (void *_inf)
   lua_fox_window* lwin = (lua_fox_window*) _inf;
   fox_app* app = lwin->app();
 
-  int window_id;
-  lua_State* L = app->get_lua_state(window_id);
+  int thread_id;
+  lua_State* L = app->get_lua_state(thread_id);
 
   int argc = 1;
   char null[1] = {'\0'};
@@ -298,7 +298,7 @@ fox_window_thread_function (void *_inf)
   app->run();
 
   GSL_SHELL_LOCK();
-  window_index_remove (L, window_id);
+  window_index_remove (L, thread_id);
   GSL_SHELL_UNLOCK();
 
   lwin->status = lua_fox_window::closed;
@@ -314,9 +314,14 @@ int fox_window_run(lua_State* L)
 
   lwin->status = lua_fox_window::starting;
 
-  int window_id = window_index_add(L, 1);
+  lua_State* new_L = lua_newthread(L);
+  int thread_id = window_index_add(L, -1);
+  lua_pop(L, 1);
 
-  app->set_lua_state(L, window_id);
+  app->set_lua_state(new_L, thread_id);
+
+  lua_settop(L, 1);
+  lua_xmove(L, new_L, 1);
 
   pthread_attr_t attr[1];
   pthread_t win_thread[1];
@@ -329,7 +334,7 @@ int fox_window_run(lua_State* L)
     {
       lwin->status = lua_fox_window::error; 
       pthread_attr_destroy (attr);
-      window_index_remove (L, window_id);
+      window_index_remove (L, thread_id);
       return luaL_error(L, "error during thread initialization");
     }
   else

@@ -16,9 +16,11 @@ long fox_app::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr)
     }
 
     GSL_SHELL_LOCK();
+
     lua_State* L = m_L;
-    window_index_get(L, m_window_id);
-    lua_getfenv(L, -1);
+    // here we assume that we always have a lua_fox_window object
+    // at the bottom of Lua stack at index position 1
+    lua_getfenv(L, 1);
     lua_rawgeti(L, -1, env_index);
     lua_pushvalue(L, 1);
 
@@ -27,9 +29,9 @@ long fox_app::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr)
     if (err != 0) {
       const char* msg = lua_tostring(L, -1);
       fprintf(stderr, "error in callback function: %s", msg);
-      lua_pop(L, 3);
-    } else {
       lua_pop(L, 2);
+    } else {
+      lua_pop(L, 1);
     }
 
     close_handler_call();
