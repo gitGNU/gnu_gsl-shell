@@ -50,4 +50,11 @@ public:
   virtual int handle(lua_State* L, gslshell::ret_status& st);
 };
 
+class gui_window : public fox_gui_element<FXMainWindow> {
+public:
+  gui_window(FXMainWindow* tf) : fox_gui_element<FXMainWindow>(tf) { }
+
+  virtual int handle(lua_State* L, gslshell::ret_status& st);
+};
+
 #endif

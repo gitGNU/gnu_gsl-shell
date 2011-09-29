@@ -12,14 +12,6 @@ local function do_paint(w)
    w:draw(DC.FILL_RECTANGLE, x, y, width, height)
 end
 
-local function on_press(w)
-   mdflag = true
-end
-
-local function on_release(w)
-   mdflag = false
-end
-
 local function on_move(w)
    if mdflag then
       local x1, y1 = w:event(EVENT.LAST_X, EVENT.LAST_Y)
@@ -52,8 +44,8 @@ ctors = UI.MainWindow {
 	    layout = {'FILL_X', 'FILL_Y', 'FILL_COLUMN', 'FILL_ROW'},
 	    style = {'SUNKEN'},
 	    onPaint = do_paint,
-	    onLeftButtonPress = on_press,
-	    onLeftButtonRelease = on_release,
+	    onLeftButtonPress = function() mdflag = true end,
+	    onLeftButtonRelease = function() mdflag = false end,
 	    onMotion = on_move,
 	 }
       },
@@ -69,7 +61,10 @@ ctors = UI.MainWindow {
 	 },
 
 	 UI.Button { text = 'Clear' },
-	 UI.Button { text = 'Exit' }
+	 UI.Button { 
+	    text = 'Exit', 
+	    onCommand = function(w) w:handle(w:self(), 'close') end 
+	 }
       }
    }
 }

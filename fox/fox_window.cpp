@@ -20,6 +20,7 @@ static int fox_window_handle_msg(lua_State* L);
 static int fox_window_event(lua_State* L);
 static int fox_window_get_dc(lua_State* L);
 static int fox_window_dc_handle(lua_State* L);
+static int fox_window_self(lua_State* L);
 
 static const struct luaL_Reg fox_window_functions[] = {
   {"fox_window", fox_window_new},
@@ -30,6 +31,7 @@ static const struct luaL_Reg fox_window_methods[] = {
   {"run",       fox_window_run},
   {"element",   fox_window_get_element},
   {"handle",    fox_window_handle_msg},
+  {"self",      fox_window_self},
   {"event",     fox_window_event},
   {"getDC",     fox_window_get_dc},
   {"draw",      fox_window_dc_handle},
@@ -106,13 +108,14 @@ int parse_handlers(lua_State* L, int env_table_index, fox_app* app)
   return (int) id;
 }
 
-fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int id, int opts, int w, int h)
+fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int win_id, int opts, int w, int h)
   : FXMainWindow(app, title, NULL, NULL, opts, 0, 0, w, h)
 {
   /* position in the Lua stack of the environment table for the window */
   const int env_table_index = 3;
 
-  app->bind(id, new fox_gui_element<fox_window>(this));
+  app->bind(win_id, new gui_window(this));
+  app->map("*", win_id);
 
   int n = lua_objlen(L, -1);
 
@@ -489,6 +492,14 @@ int fox_window_dc_handle(lua_State* L)
   return 0;
 }
 
+int fox_window_self(lua_State* L)
+{
+  lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
+  int id;
+  lwin->app()->lookup_name("*", id);
+  lua_pushinteger(L, id);
+  return 1;
+}
 
 void
 fox_window_register (lua_State *L)

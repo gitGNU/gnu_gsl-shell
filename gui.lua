@@ -90,6 +90,7 @@ function M.MainWindow(spec)
    local ctor = { 
       type_id = GUI.MAIN_WINDOW,
       id = get_element_id(),
+      name = spec.name,
       args = {spec.title or 'Test Window', DECOR.ALL, w or 0, h or 0}
    }
    ctor.body = parse_childs(nil, ctor.id, spec)
