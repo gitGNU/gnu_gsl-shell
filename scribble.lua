@@ -2,9 +2,9 @@ local UI = require 'gui'
 
 local DC    = require 'fox-dc'
 local EVENT = require 'fox-event'
+local OP    = require 'fox-method'
 
-local dirty = false
-local mdflag = false
+local dirty, mdflag = false, false
 
 -- Since the canvas id is frequently used we store its value in a local variable.
 -- The actual value is retrieved only after the creation of the window
@@ -21,7 +21,7 @@ local function do_paint(w)
 end
 
 local function do_clear(w)
-   clear_rect(w, 0, 0, w:handle(canvas_id, 'get_size'))
+   clear_rect(w, 0, 0, w:handle(canvas_id, OP.GET_SIZE))
    dirty = false
 end
 
@@ -78,20 +78,20 @@ ctors = UI.MainWindow {
 	    text = 'Clear', 
 	    name = 'clear_bt',
 	    onCommand = do_clear, 
-	    onUpdate = function()
+	    onUpdate = function(w)
 			  local id = w:element'clear_bt'
-			  w:handle(id, dirty and 'enable' or 'disable')
+			  w:handle(id, dirty and OP.ENABLE or OP.DISABLE)
 		       end,
 	 },
 
 	 UI.Button { 
 	    text = 'Exit', 
-	    onCommand = function(w) w:handle(w:self(), 'close') end 
+	    onCommand = function(w) w:handle(w:self(), OP.CLOSE) end 
 	 }
       }
    }
 }
 
-w = UI.Create(ctors)
+win = UI.Create(ctors)
 
-canvas_id = w:element'canvas'
+canvas_id = win:element'canvas'

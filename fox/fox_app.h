@@ -79,11 +79,6 @@ public:
     return m_L;
   }
 
-  FXDrawable* get_object_by_id(int id) {
-    gui_element* elem = lookup(id);
-    return (elem ? elem->content() : 0);
-  }
-
 private:
   fox_app(const fox_app&);
   fox_app &operator=(const fox_app&);

@@ -11,65 +11,71 @@ __BEGIN_DECLS
 __END_DECLS
 
 #include "lua-cpp-utils.h"
+#include "gui-types.h"
 
-template <typename Fox_object>
-struct gui_element_gen {
-  virtual int handle(lua_State* L, gslshell::ret_status& st) = 0;
-  virtual Fox_object* content() = 0;
-  virtual ~gui_element_gen() { };
+typedef gslshell::ret_status err;
+
+struct gui_element {
+  virtual int handle(lua_State* L, FXApp* app, int method_id, err& st) = 0;
+
+  virtual FXDrawable*  as_drawable() = 0;
+  virtual FXWindow*    as_window() = 0;
+  virtual FXComposite* as_composite() = 0;
+
+  virtual ~gui_element() { };
 };
 
-typedef gui_element_gen<FX::FXDrawable> gui_element;
-
-template <typename Fox_widget>
-class fox_gui_element : public gui_element {
+class gui_drawable : public gui_element {
 public:
-  fox_gui_element(Fox_widget* w) : m_widget(w) { }
+  gui_drawable(FXDrawable* w) : m_widget(w) { }
 
-  Fox_widget* operator->()      { return m_widget; }
-  virtual FXDrawable* content() { return m_widget; };
+  virtual FXDrawable*  as_drawable()  { return m_widget; }
+  virtual FXWindow*    as_window()    { return 0; }
+  virtual FXComposite* as_composite() { return 0; }
 
-  virtual int handle(lua_State* L, gslshell::ret_status& st) {
-    return not_implemented(st); 
-  }
+  virtual int handle(lua_State* L, FXApp* app, int method_id, err& st) {
+    switch (method_id) {
+    case gui::close:
+      m_widget->handle(app, FXSEL(SEL_CLOSE,0), NULL);
+      break;
+    case gui::enable:
+      m_widget->handle(app, FXSEL(SEL_COMMAND,FXWindow::ID_ENABLE), NULL);
+      break;
+    case gui::disable:
+      m_widget->handle(app, FXSEL(SEL_COMMAND,FXWindow::ID_DISABLE), NULL);
+      break;
+    default:
+      st.error("not implemented", "gui element method");
+    }
 
-private:
-  int not_implemented(gslshell::ret_status& st) {
-    st.error("not implemented", "gui element method");
     return 0;
   }
 
 protected:
-  Fox_widget* m_widget;
+  FXDrawable* m_widget;
 };
 
-class text_field : public fox_gui_element<FXTextField> {
+class gui_window : public gui_drawable {
 public:
-  text_field(FXTextField* tf) : fox_gui_element<FXTextField>(tf) { }
+  gui_window(FXWindow* w) : gui_drawable(w) { }
 
-  virtual int handle(lua_State* L, gslshell::ret_status& st);
+  virtual FXWindow*    as_window()    { return (FXWindow*) m_widget; }
+
+  virtual int handle(lua_State* L, FXApp* app, int method_id, err& st);
 };
 
-class gui_window : public fox_gui_element<FXWindow> {
+class gui_composite : public gui_window {
 public:
-  gui_window(FXWindow* tf) : fox_gui_element<FXWindow>(tf) { }
+  gui_composite(FXComposite* obj) : gui_window(obj) { }
 
-  virtual int handle(lua_State* L, gslshell::ret_status& st);
+  virtual FXComposite* as_composite() { return (FXComposite*) m_widget; }
 };
 
-class gui_button : public fox_gui_element<FXButton> {
+class text_field : public gui_window {
 public:
-  gui_button(FXButton* b) : fox_gui_element<FXButton>(b) { }
+  text_field(FXTextField* tf) : gui_window(tf) { }
 
-  virtual int handle(lua_State* L, gslshell::ret_status& st);
-};
-
-
-class gui_main_window : public fox_gui_element<FXMainWindow> {
-public:
-  gui_main_window(FXMainWindow* tf) : fox_gui_element<FXMainWindow>(tf) { }
-
-  virtual int handle(lua_State* L, gslshell::ret_status& st);
+  virtual int handle(lua_State* L, FXApp* app, int method_id, err& st);
 };
 
 #endif

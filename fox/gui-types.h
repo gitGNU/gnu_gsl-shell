@@ -1,3 +1,5 @@
+#ifndef GUI_TYPES_H
+#define GUI_TYPES_H
 
 namespace gui {
 
@@ -10,4 +12,16 @@ namespace gui {
     button           = 5,
     canvas           = 6,
   };
+
+  enum method_e {
+    close         = 0,
+    get_text      = 1,
+    set_text      = 2,
+    get_size      = 3,
+    enable        = 4,
+    disable       = 5,
+  };
+
 }
+
+#endif

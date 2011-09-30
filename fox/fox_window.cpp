@@ -110,7 +110,7 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int win_id
   /* position in the Lua stack of the environment table for the window */
   const int env_table_index = 3;
 
-  app->bind(win_id, new gui_main_window(this));
+  app->bind(win_id, new gui_composite(this));
   app->map("*", win_id);
 
   int n = lua_objlen(L, -1);
@@ -123,7 +123,7 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int win_id
     const char* name = get_string_field(L, "name");
 
     int parent_id = get_int_field(L, "parent");
-    FXComposite* parent = (FXComposite*) app->get_object_by_id(parent_id);
+    FXComposite* parent = app->lookup(parent_id)->as_composite();
 
     assert(parent);
 
@@ -136,7 +136,7 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int win_id
 	int opts = get_int_element(L, 1);
 	lua_pop(L, 1);
 	FXHorizontalFrame* hf = new FXHorizontalFrame(parent, opts);
-	elem = new fox_gui_element<FXHorizontalFrame>(hf);
+	elem = new gui_composite(hf);
 	printf("Adding horizontal frame (id=%i) to object id= %i\n", id, parent_id);
 	break;
       }
@@ -146,7 +146,7 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int win_id
 	int opts = get_int_element(L, 1);
 	lua_pop(L, 1);
 	FXVerticalFrame* hf = new FXVerticalFrame(parent, opts);
-	elem = new fox_gui_element<FXVerticalFrame>(hf);
+	elem = new gui_composite(hf);
 	printf("Adding vertical frame (id=%i) to object id= %i\n", id, parent_id);
 	break;
       }
@@ -162,7 +162,7 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int win_id
 
 	FXButton* b = new FXButton(parent, text, NULL, hid >= 0 ? app : 0, hid);
 
-	elem = new gui_button(b);
+	elem = new gui_window(b);
 	printf("Adding button (id=%i) to object id= %i\n", id, parent_id);
 	break;
       }
@@ -182,7 +182,7 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int win_id
 	const char *text = get_string_element(L, 1);
 	lua_pop(L, 1);
 	FXLabel* label = new FXLabel(parent, text);
-	elem = new fox_gui_element<FXLabel>(label);
+	elem = new gui_window(label);
 	break;
       }
     case gui::canvas:
@@ -356,17 +356,20 @@ int fox_window_get_element(lua_State* L)
 int fox_window_handle_msg(lua_State* L)
 {
   lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
-  int id = luaL_checkinteger(L, 2);
+  int widget_id = luaL_checkinteger(L, 2);
+  int method_id = luaL_checkinteger(L, 3);
 
-  gui_element* elem = lwin->app()->lookup(id);
+  fox_app* app = lwin->app();
+
+  gui_element* elem = app->lookup(widget_id);
 
   if (!elem)
-    return luaL_error(L, "invalid element id: %i in handle method", id);
+    return luaL_error(L, "invalid element id: %i in handle method", widget_id);
 
   if (lwin->status == lua_fox_window::running)
     {
       gslshell::ret_status st;
-      int n = elem->handle(L, st);
+      int n = elem->handle(L, app, method_id, st);
 
       if (st.error_msg()) {
 	return luaL_error(L, "%s in %s\n", st.error_msg(), st.context());
@@ -439,7 +442,9 @@ int fox_window_get_dc(lua_State* L)
   lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
   fox_app* app = lwin->app();
   int id = luaL_checkinteger(L, 2);
-  FXDrawable* draw = app->get_object_by_id(id);
+  FXDrawable* draw = app->lookup(id)->as_drawable();
+  if (!draw)
+    luaL_error(L, "cannor associate a DC");
   app->set_dc(draw);
   return 0;
 }
