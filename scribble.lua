@@ -5,11 +5,18 @@ local EVENT = require 'fox-event'
 
 local mdflag = false
 
-local function do_paint(w)
-   local x, y, width, height = w:event(EVENT.RECT)
+local function clear_rect(w, x, y, width, height)
    w:getDC(w:element'canvas')
    w:draw(DC.SET_FOREGROUND, DC.RGB(255, 255, 255))
    w:draw(DC.FILL_RECTANGLE, x, y, width, height)
+end
+
+local function do_paint(w)
+   clear_rect(w, w:event(EVENT.RECT))
+end
+
+local function do_clear(w)
+   clear_rect(w, 0, 0, w:handle(w:element'canvas', 'get_size'))
 end
 
 local function on_move(w)
@@ -60,7 +67,7 @@ ctors = UI.MainWindow {
 	    text = "Button Frame",
 	 },
 
-	 UI.Button { text = 'Clear' },
+	 UI.Button { text = 'Clear', onCommand = do_clear },
 	 UI.Button { 
 	    text = 'Exit', 
 	    onCommand = function(w) w:handle(w:self(), 'close') end 

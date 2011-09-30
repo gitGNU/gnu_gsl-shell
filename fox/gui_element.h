@@ -50,9 +50,17 @@ public:
   virtual int handle(lua_State* L, gslshell::ret_status& st);
 };
 
-class gui_window : public fox_gui_element<FXMainWindow> {
+class gui_window : public fox_gui_element<FXWindow> {
 public:
-  gui_window(FXMainWindow* tf) : fox_gui_element<FXMainWindow>(tf) { }
+  gui_window(FXWindow* tf) : fox_gui_element<FXWindow>(tf) { }
+
+  virtual int handle(lua_State* L, gslshell::ret_status& st);
+};
+
+
+class gui_main_window : public fox_gui_element<FXMainWindow> {
+public:
+  gui_main_window(FXMainWindow* tf) : fox_gui_element<FXMainWindow>(tf) { }
 
   virtual int handle(lua_State* L, gslshell::ret_status& st);
 };

@@ -24,11 +24,26 @@ int gui_window::handle(lua_State* L, gslshell::ret_status& st)
 {
   const char *method = lua_tostring(L, 3);
 
+  if (strcmp(method, "get_size") == 0) {
+    int w = m_widget->getWidth(), h = m_widget->getHeight();
+    lua_pushinteger(L, w);
+    lua_pushinteger(L, h);
+    return 2;
+  }
+
+  st.error("invalid request", "window method");
+  return 0;
+}
+
+int gui_main_window::handle(lua_State* L, gslshell::ret_status& st)
+{
+  const char *method = lua_tostring(L, 3);
+
   if (strcmp(method, "close") == 0) {
     m_widget->handle(m_widget, FXSEL(SEL_CLOSE,0), 0);
     return 0;
   }
 
-  st.error("invalid request", "window method");
+  st.error("invalid request", "main window method");
   return 0;
 }

@@ -110,7 +110,7 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int win_id
   /* position in the Lua stack of the environment table for the window */
   const int env_table_index = 3;
 
-  app->bind(win_id, new gui_window(this));
+  app->bind(win_id, new gui_main_window(this));
   app->map("*", win_id);
 
   int n = lua_objlen(L, -1);
@@ -196,7 +196,7 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int win_id
 	lua_pop(L, 1);
 
 	FXCanvas* canvas = new FXCanvas(parent, id >= 0 ? app : NULL, hid, opts);
-	elem = new fox_gui_element<FXCanvas>(canvas);
+	elem = new gui_window(canvas);
 	printf("Adding canvas (id=%i) to object id= %i\n", id, parent_id);
 	break;
       }
