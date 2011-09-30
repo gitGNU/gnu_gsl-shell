@@ -35,6 +35,23 @@ int gui_window::handle(lua_State* L, gslshell::ret_status& st)
   return 0;
 }
 
+
+int gui_button::handle(lua_State* L, gslshell::ret_status& st)
+{
+  const char *method = lua_tostring(L, 3);
+
+  if (strcmp(method, "enable") == 0) {
+    m_widget->handle(m_widget, FXSEL(SEL_COMMAND,FXWindow::ID_ENABLE), NULL);
+    return 0;
+  } else if (strcmp(method, "disable") == 0) {
+    m_widget->handle(m_widget, FXSEL(SEL_COMMAND,FXWindow::ID_DISABLE), NULL);
+    return 0;
+  }
+
+  st.error("invalid request", "button method");
+  return 0;
+}
+
 int gui_main_window::handle(lua_State* L, gslshell::ret_status& st)
 {
   const char *method = lua_tostring(L, 3);

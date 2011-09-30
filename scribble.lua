@@ -3,10 +3,15 @@ local UI = require 'gui'
 local DC    = require 'fox-dc'
 local EVENT = require 'fox-event'
 
+local dirty = false
 local mdflag = false
 
+-- Since the canvas id is frequently used we store its value in a local variable.
+-- The actual value is retrieved only after the creation of the window
+local canvas_id
+
 local function clear_rect(w, x, y, width, height)
-   w:getDC(w:element'canvas')
+   w:getDC(canvas_id)
    w:draw(DC.SET_FOREGROUND, DC.RGB(255, 255, 255))
    w:draw(DC.FILL_RECTANGLE, x, y, width, height)
 end
@@ -16,16 +21,18 @@ local function do_paint(w)
 end
 
 local function do_clear(w)
-   clear_rect(w, 0, 0, w:handle(w:element'canvas', 'get_size'))
+   clear_rect(w, 0, 0, w:handle(canvas_id, 'get_size'))
+   dirty = false
 end
 
 local function on_move(w)
    if mdflag then
       local x1, y1 = w:event(EVENT.LAST_X, EVENT.LAST_Y)
       local x2, y2 = w:event(EVENT.WIN_X,  EVENT.WIN_Y)
-      w:getDC(w:element'canvas')
+      w:getDC(canvas_id)
       w:draw(DC.SET_FOREGROUND, DC.RGB(255, 0, 0))
       w:draw(DC.DRAW_LINE, x1, y1, x2, y2)
+      dirty = true
    end
 end
 
@@ -67,7 +74,16 @@ ctors = UI.MainWindow {
 	    text = "Button Frame",
 	 },
 
-	 UI.Button { text = 'Clear', onCommand = do_clear },
+	 UI.Button {
+	    text = 'Clear', 
+	    name = 'clear_bt',
+	    onCommand = do_clear, 
+	    onUpdate = function()
+			  local id = w:element'clear_bt'
+			  w:handle(id, dirty and 'enable' or 'disable')
+		       end,
+	 },
+
 	 UI.Button { 
 	    text = 'Exit', 
 	    onCommand = function(w) w:handle(w:self(), 'close') end 
@@ -77,3 +93,5 @@ ctors = UI.MainWindow {
 }
 
 w = UI.Create(ctors)
+
+canvas_id = w:element'canvas'

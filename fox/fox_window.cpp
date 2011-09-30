@@ -162,7 +162,7 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int win_id
 
 	FXButton* b = new FXButton(parent, text, NULL, hid >= 0 ? app : 0, hid);
 
-	elem = new fox_gui_element<FXButton>(b);
+	elem = new gui_button(b);
 	printf("Adding button (id=%i) to object id= %i\n", id, parent_id);
 	break;
       }

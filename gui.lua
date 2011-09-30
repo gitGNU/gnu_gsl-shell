@@ -65,6 +65,7 @@ local handler_table = {
    onLeftButtonPress   = SEL.LEFTBUTTONPRESS,
    onLeftButtonRelease = SEL.LEFTBUTTONRELEASE,
    onMotion            = SEL.MOTION,
+   onUpdate            = SEL.UPDATE,
 }
 
 local function parse_handlers(spec, id)
