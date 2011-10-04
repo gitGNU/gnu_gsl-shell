@@ -3,14 +3,20 @@
 
 namespace gui {
 
+  // TODO: use LuaJIT2 C declarations parser to obtain the enum integer
+  // values to be used in Lua.
   enum typeid_e {
-    main_window      = 0,
-    horizontal_frame = 1,
-    vertical_frame   = 2,
-    label            = 3,
-    text_field       = 4,
-    button           = 5,
-    canvas           = 6,
+    main_window = 1,
+    horizontal_frame,
+    vertical_frame,
+    label,
+    text_field,
+    button,
+    canvas,
+    menu_bar,
+    menu_title,
+    menu_pane,
+    menu_command,
   };
 
   enum method_e {

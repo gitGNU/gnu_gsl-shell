@@ -11,13 +11,17 @@ local create = gsl.fox_window
 local M = {}
 
 local GUI = {
-   MAIN_WINDOW      = 0,
-   HORIZONTAL_FRAME = 1,
-   VERTICAL_FRAME   = 2,
-   LABEL            = 3,
-   TEXT_FIELD       = 4,
-   BUTTON           = 5,
-   CANVAS           = 6,
+   MAIN_WINDOW      = 1,
+   HORIZONTAL_FRAME = 2,
+   VERTICAL_FRAME   = 3,
+   LABEL            = 4,
+   TEXT_FIELD       = 5,
+   BUTTON           = 6,
+   CANVAS           = 7,
+   MENU_BAR         = 8,
+   MENU_TITLE       = 9,
+   MENU_PANE        = 10,
+   MENU_COMMAND     = 11,
 }
 
 local function parse_gen_options(table, opts)
@@ -74,7 +78,12 @@ local function parse_handlers(spec, id)
       local sel = handler_table[k]
       if sel then hs[#hs+1] = {sel, v} end
    end
-   return #hs > 0 and hs or 0
+   if #hs > 0 then return hs end
+end
+
+local function raw_ctor(type_id)
+   local id = get_element_id()
+   return { type_id = type_id, id = id }
 end
 
 local function base_ctor(type_id, spec)
@@ -133,6 +142,36 @@ function M.Canvas(spec)
    local ctor = base_ctor(GUI.CANVAS, spec)
    ctor.args = { parse_options(spec) }
    return { ctor }
+end
+
+function M.MenuCommand(spec)
+   local ctor = base_ctor(GUI.MENU_COMMAND, spec)
+   ctor.args = { spec[1] or '<Unspecified>' }
+   return { ctor }
+end
+
+function M.MenuTitle(spec)
+   local ctor = base_ctor(GUI.MENU_PANE, spec)
+   local ctors = parse_childs(ctor, ctor.id, spec)
+
+   -- MenuTitle creator line
+   mtctor = raw_ctor(GUI.MENU_TITLE)
+   mtctor.args = { spec.text or '<Unspecified>', ctor.id, parse_options(spec) }
+
+   ctors[#ctors+1] = mtctor
+   return ctors
+end
+
+function M.MenuBar(spec)
+   local wctor = base_ctor(GUI.MENU_BAR, spec)
+   wctor.args = { parse_options(spec) }
+
+   local ctors = parse_childs(wctor, wctor.id, spec)
+   for _, c in ipairs(ctors) do
+      if c.type_id == GUI.MENU_PANE then c.parent = nil end
+   end
+
+   return ctors
 end
 
 function M.Create(ctors)

@@ -160,7 +160,8 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int win_id
  	int hid = parse_handlers(L, env_table_index, app, id);
 	lua_pop(L, 1);
 
-	FXButton* b = new FXButton(parent, text, NULL, hid >= 0 ? app : 0, hid);
+	FXObject* target = (hid >= 0 ? app : NULL);
+	FXButton* b = new FXButton(parent, text, NULL, target, hid);
 
 	elem = new gui_window(b);
 	printf("Adding button (id=%i) to object id= %i\n", id, parent_id);
@@ -195,9 +196,60 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int win_id
  	int hid = parse_handlers(L, env_table_index, app, id);
 	lua_pop(L, 1);
 
-	FXCanvas* canvas = new FXCanvas(parent, id >= 0 ? app : NULL, hid, opts);
+	FXObject* target = (hid >= 0 ? app : NULL);
+	FXCanvas* canvas = new FXCanvas(parent, target, hid, opts);
 	elem = new gui_window(canvas);
 	printf("Adding canvas (id=%i) to object id= %i\n", id, parent_id);
+	break;
+      }
+    case gui::menu_bar:
+      {
+	lua_getfield(L, -1, "args");
+	int opts = get_int_element(L, 1);
+	lua_pop(L, 1);
+	
+	FXMenuBar* mb = new FXMenuBar(parent, opts);
+	elem = new gui_composite(mb);
+	break;
+      }
+    case gui::menu_title:
+      {
+	lua_getfield(L, -1, "args");
+	const char* text = get_string_element(L, 1);
+	int menu_pane_id = get_int_element(L, 2);
+	int opts = get_int_element(L, 3);
+	lua_pop(L, 1);
+
+	gui_element* menu_pane_el = app->lookup(menu_pane_id);
+
+	if (!menu_pane_el)
+	  luaL_error(L, "error in menu construction");
+
+	FXMenuPane* menu_pane = (FXMenuPane *) (menu_pane_el->as_composite());
+
+	FXMenuTitle* mt = new FXMenuTitle(parent, text, NULL, menu_pane, opts);
+	elem = new gui_window(mt);
+	break;
+      }
+    case gui::menu_pane:
+      {
+	FXMenuPane* mp = new FXMenuPane(parent);
+	elem = new gui_composite(mp);
+	break;
+      }
+    case gui::menu_command:
+      {
+	lua_getfield(L, -1, "args");
+	const char* text = get_string_element(L, 1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, -1, "handlers");
+ 	int hid = parse_handlers(L, env_table_index, app, id);
+	lua_pop(L, 1);
+
+	FXObject* target = (hid >= 0 ? app : NULL);
+	FXMenuCommand* mc = new FXMenuCommand(parent, text, NULL, target, hid);
+	elem = new gui_window(mc);
 	break;
       }
     default:
