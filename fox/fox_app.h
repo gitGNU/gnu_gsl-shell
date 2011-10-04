@@ -74,10 +74,8 @@ public:
     m_thread_id = thread_id;
   }
 
-  lua_State* get_lua_state(int& thread_id) {
-    thread_id = m_thread_id;
-    return m_L;
-  }
+  lua_State* lua_state()     { return m_L; }
+  int        lua_thread_id() { return m_thread_id; }
 
 private:
   fox_app(const fox_app&);
