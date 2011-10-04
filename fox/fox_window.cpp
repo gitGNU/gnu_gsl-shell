@@ -167,6 +167,7 @@ fox_window::fox_window(lua_State* L, fox_app* app, const char* title, int win_id
     case gui::menu_pane:
       {
 	FXMenuPane* mp = new FXMenuPane(parent);
+	app->add_resource(mp);
 	elem = new gui_composite(mp);
 	break;
       }

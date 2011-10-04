@@ -33,7 +33,7 @@ public:
   }
 
   fox_app() : FXApp("FOX App test"),
-	      m_L(0), m_thread_id(-1), m_env_handler_index(0),
+	      m_resources(0), m_L(0), m_thread_id(-1), m_env_handler_index(0),
 	      m_current_event(0), m_current_dc(0)
   { }
 
@@ -43,11 +43,21 @@ public:
       gui_element* obj = p->content().value;
       delete obj;
     }
+
+    for (list<FXObject*>* p = m_resources; p; p = p->next()) {
+      FXObject* obj = p->content();
+      delete obj;
+    }
+
     delete m_current_dc;
   }
 
   void bind(int id, gui_element* obj) { m_objects.insert(id, obj); }
   void map(const char* name, int id) { m_symbols.insert(name, id); }
+
+  void add_resource(FXObject* obj) {
+    m_resources = new list<FXObject*>(obj, m_resources);
+  }
 
   FXEvent* event() { return m_current_event; }
 
@@ -83,6 +93,7 @@ private:
 
   dict<int, gui_element*> m_objects;
   dict<FXString, int> m_symbols;
+  list<FXObject*>* m_resources;
 
   lua_State* m_L;
   int m_thread_id;
