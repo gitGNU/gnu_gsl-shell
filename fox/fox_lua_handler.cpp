@@ -1,10 +1,8 @@
-#include "fox_app.h"
+#include "fox_lua_handler.h"
 #include "gsl-shell.h"
 #include "window_registry.h"
 
-const FX::FXMetaClass fox_app::metaClass("fox_app", fox_app::manufacture, &FXApp::metaClass, NULL, 0, 0);
-
-long fox_app::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr)
+long fox_lua_handler::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr)
 { 
   int env_index;
 
@@ -40,23 +38,23 @@ long fox_app::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr)
     return (err == 0 ? 1 : 0);
   }
 
-  return FXApp::handle(sender, sel, ptr);
+  return 0;
 };
 
-void fox_app::set_dc(FXDrawable* w)
+void fox_lua_handler::set_dc(FXDrawable* w)
 {
   delete m_current_dc;
   m_current_dc = new FXDCWindow(w);
 }
 
-void fox_app::close_handler_call()
+void fox_lua_handler::close_handler_call()
 {
   m_current_event = 0;
   delete m_current_dc;
   m_current_dc = 0;
 }
 
-int fox_app::assign_handler(FX::FXuint sel)
+int fox_lua_handler::assign_handler(FX::FXuint sel)
 {
   int index = (++ m_env_handler_index);
   m_sel_map.insert(sel, index);

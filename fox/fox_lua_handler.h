@@ -1,5 +1,5 @@
-#ifndef FOX_APP_H
-#define FOX_APP_H
+#ifndef FOX_LUA_HANDLER_H
+#define FOX_LUA_HANDLER_H
 
 #include <fx.h>
 
@@ -14,50 +14,27 @@ __BEGIN_DECLS
 
 __END_DECLS
 
-class fox_app : public FXApp {
+class fox_lua_handler {
 public:
-  static const FX::FXMetaClass metaClass;
-
-  static FX::FXObject* manufacture() { return new fox_app; }
-
-  virtual long handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr);
-
-  virtual const FX::FXMetaClass* getMetaClass() const { return &metaClass; }
-
-  friend FX::FXStream& operator<<(FX::FXStream& store, const fox_app* obj) {
-    return store.saveObject((FX::FXObjectPtr)(obj)); 
-  }
-
-  friend FX::FXStream& operator>>(FX::FXStream& store, fox_app*& obj) {
-    return store.loadObject((FX::FXObjectPtr&)(obj));
-  }
-
-  fox_app() : FXApp("FOX App test"),
-	      m_resources(0), m_L(0), m_thread_id(-1), m_env_handler_index(0),
-	      m_current_event(0), m_current_dc(0)
+  fox_lua_handler() : 
+    m_L(0), m_thread_id(-1), m_env_handler_index(0),
+    m_current_event(0), m_current_dc(0)
   { }
 
-  ~fox_app() {
+  ~fox_lua_handler() {
     typedef dict<int, gui_element*> obj_dict;
     for (obj_dict::iterator* p = m_objects.start(); p; p = m_objects.next(p)) {
       gui_element* obj = p->content().value;
       delete obj;
     }
 
-    for (list<FXObject*>* p = m_resources; p; p = p->next()) {
-      FXObject* obj = p->content();
-      delete obj;
-    }
-
     delete m_current_dc;
   }
 
+  virtual long handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr);
+
   void bind(int id, gui_element* obj) { m_objects.insert(id, obj); }
   void map(const char* name, int id) { m_symbols.insert(name, id); }
-
-  void add_resource(FXObject* obj) {
-    m_resources = new list<FXObject*>(obj, m_resources);
-  }
 
   FXEvent* event() { return m_current_event; }
 
@@ -88,12 +65,8 @@ public:
   int        lua_thread_id() { return m_thread_id; }
 
 private:
-  fox_app(const fox_app&);
-  fox_app &operator=(const fox_app&);
-
   dict<int, gui_element*> m_objects;
   dict<FXString, int> m_symbols;
-  list<FXObject*>* m_resources;
 
   lua_State* m_L;
   int m_thread_id;

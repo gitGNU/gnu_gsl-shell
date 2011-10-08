@@ -1,7 +1,7 @@
 #include <new>
 #include <assert.h>
 
-#include "lua_fox_window.h"
+#include "lua_fox_dialog.h"
 #include "gui-types.h"
 #include "gs-types.h"
 #include "lua-cpp-utils.h"
@@ -12,49 +12,31 @@
 
 __BEGIN_DECLS
 
-static int fox_window_run(lua_State* L);
-static int fox_window_new(lua_State* L);
-static int fox_window_free(lua_State* L);
-static int fox_window_get_element(lua_State* L);
-static int fox_window_handle_msg(lua_State* L);
-static int fox_window_event(lua_State* L);
-static int fox_window_get_dc(lua_State* L);
-static int fox_window_dc_handle(lua_State* L);
-static int fox_window_self(lua_State* L);
+static int fox_dialog_new(lua_State* L);
+static int fox_dialog_free(lua_State* L);
+static int fox_dialog_execute(lua_State* L);
 
-static const struct luaL_Reg fox_window_functions[] = {
-  {"fox_window", fox_window_new},
-  {NULL, NULL}
-};
-
-static const struct luaL_Reg fox_window_methods[] = {
-  {"run",       fox_window_run},
+static const struct luaL_Reg fox_dialog_methods[] = {
   {"element",   fox_window_get_element},
   {"handle",    fox_window_handle_msg},
   {"self",      fox_window_self},
   {"event",     fox_window_event},
   {"getDC",     fox_window_get_dc},
   {"draw",      fox_window_dc_handle},
-  {"__gc",      fox_window_free},
   {NULL, NULL}
 };
 
 __END_DECLS
 
-typedef lua_thread_info<lua_fox_window> thread_info;
-
-lua_fox_window::~lua_fox_window()
+int fox_dialog_new(lua_State* L)
 {
-  if (status == not_started || status == error)
-    delete this->app();
-}
+  lua_fox_window* lmain_win = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
+  fox_app* app = lmain_win->app();
 
-int fox_window_new(lua_State* L)
-{
   int type_id = get_int_field(L, "type_id");
   int id      = get_int_field(L, "id");
 
-  if (type_id == gui::main_window) {
+  if (type_id == gui::dialog) {
     lua_getfield(L, -1, "args");
 
     lua_rawgeti(L, -1, 1);
@@ -67,17 +49,18 @@ int fox_window_new(lua_State* L)
       
     lua_pop(L, 1);
 
-    lua_fox_window* lwin = (lua_fox_window*) gs_new_object(sizeof(lua_fox_window), L, GS_FOX_WINDOW);
+    lua_fox_dialog* lwin = push_new_object<lua_fox_dialog>(L, GS_FOX_DIALOG);
 
     lua_newtable(L);
     lua_getfield(L, -3, "body");
 
-    FXApp* app = new FXApp("GSL Shell FOX Window");
-    fox_window* win = new fox_window(L, app, title, id, opts, width, height);
-
-    lwin->init(win);
+    lwin->dialog = new fox_dialog(L, app, title, id, opts, width, height);
 
     lua_pop(L, 1);
+    // we create here a reference to the main window to ensure that the
+    // related Lua object is not freed by the GC prematurely
+    lua_pushvalue(L, 1);
+    lua_rawseti(L, -2, 0);
     lua_setfenv(L, -2);
 
     return 1;
@@ -86,93 +69,13 @@ int fox_window_new(lua_State* L)
   return luaL_error (L, "invalid contructor type_id: %i", type_id);
 }
 
-int fox_window_free(lua_State* L)
-{
-  lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
-  lwin->~lua_fox_window();
-  return 0;
-}
-
-static void *
-fox_window_thread_function (void *_inf)
-{
-  lua_fox_window* lwin = (lua_fox_window*) _inf;
-  fox_lua_handler* lua_handler = lwin->lua_handler();
-  FXApp* app = lwin->app();
-
-  lua_State* L = lua_handler->lua_state();
-
-  int argc = 1;
-  char null[1] = {'\0'};
-  char *argv[1];
-
-  argv[0] = null;
-
-  // Open display
-  app->init(argc, argv);
-
-  lwin->status = lua_fox_window::running;
-
-  app->create();
-  app->run();
-
-  GSL_SHELL_LOCK();
-  window_index_remove (L, lua_handler->lua_thread_id());
-  GSL_SHELL_UNLOCK();
-
-  lwin->status = lua_fox_window::closed;
-  delete app;
-
-  return NULL;
-}
-
-int fox_window_run(lua_State* L)
-{
-  lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
-
-  if (lwin->status != lua_fox_window::not_started)
-    return luaL_error(L, "window already running or terminated");
-
-  lwin->status = lua_fox_window::starting;
-
-  lua_State* new_L = lua_newthread(L);
-  int thread_id = window_index_add(L, -1);
-  lua_pop(L, 1);
-
-  lwin->lua_handler()->set_lua_state(new_L, thread_id);
-
-  lua_settop(L, 1);
-  lua_xmove(L, new_L, 1);
-
-  pthread_attr_t attr[1];
-  pthread_t win_thread[1];
-
-  pthread_attr_init (attr);
-  pthread_attr_setdetachstate (attr, PTHREAD_CREATE_DETACHED);
-
-  void *user_data = (void *) lwin;
-  if (pthread_create(win_thread, attr, fox_window_thread_function, user_data))
-    {
-      lwin->status = lua_fox_window::error; 
-      pthread_attr_destroy (attr);
-      window_index_remove (L, thread_id);
-      return luaL_error(L, "error during thread initialization");
-    }
-  else
-    {
-      pthread_attr_destroy (attr);
-    }
-
-  return 0;
-}
-
 int fox_window_get_element(lua_State* L)
 {
   lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
   const char* key = lua_tostring(L, 2);
 
   int id;
-  if (lwin->lua_handler()->lookup_name(key, id)) {
+  if (lwin->app()->lookup_name(key, id)) {
     lua_pushinteger(L, id);
     return 1;
   }
@@ -184,12 +87,12 @@ int
 lua_fox_window::protected_call(lua_State* L,
 			       int (lua_fox_window::*method)(lua_State*, err&))
 {
-  bool is_fox_thread = (L == lua_handler()->lua_state());
+  bool is_fox_thread = (L == m_app->lua_state());
   err status;
   int retval = 0;
 
   if (!is_fox_thread) {
-    app()->mutex().lock();
+    m_app->mutex().lock();
   }
 
   if (this->status == lua_fox_window::running) {
@@ -199,8 +102,8 @@ lua_fox_window::protected_call(lua_State* L,
   }
 
   if (!is_fox_thread) {
-    app()->flush();
-    app()->mutex().unlock();
+    m_app->flush();
+    m_app->mutex().unlock();
   }
 
   if (status.error_msg())
@@ -215,14 +118,14 @@ lua_fox_window::handle_msg(lua_State* L, err& st)
   int widget_id = luaL_checkinteger(L, 2);
   int method_id = luaL_checkinteger(L, 3);
 
-  gui_element* elem = lua_handler()->lookup(widget_id);
+  gui_element* elem = m_app->lookup(widget_id);
 
   if (!elem) {
     st.error("invalid element id", "FOX window handle");
     return 0;
   }
 
-  return elem->handle(L, app(), method_id, st);
+  return elem->handle(L, m_app, method_id, st);
 }
 
 int fox_window_handle_msg(lua_State* L)
@@ -235,7 +138,7 @@ int fox_window_handle_msg(lua_State* L)
 int fox_window_event(lua_State* L)
 {
   lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
-  FXEvent* event = lwin->lua_handler()->event();
+  FXEvent* event = lwin->app()->event();
 
   if (!event) {
     return luaL_error(L, "no event available");
@@ -290,12 +193,12 @@ int fox_window_event(lua_State* L)
 int fox_window_get_dc(lua_State* L)
 {
   lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
-  fox_lua_handler* hnd = lwin->lua_handler();
+  fox_app* app = lwin->app();
   int id = luaL_checkinteger(L, 2);
-  FXDrawable* draw = hnd->lookup(id)->as_drawable();
+  FXDrawable* draw = app->lookup(id)->as_drawable();
   if (!draw)
     luaL_error(L, "cannor associate a DC");
-  hnd->set_dc(draw);
+  app->set_dc(draw);
   return 0;
 }
 
@@ -304,7 +207,7 @@ lua_fox_window::dc_handle(lua_State* L, err& st)
 {
   int oper_id = lua_tointeger(L, 2);
   
-  FXDCWindow* dc = lua_handler()->current_dc();
+  FXDCWindow* dc = m_app->current_dc();
 
   if (!dc) {
     st.error("invalid drawing context", "drawing method");
@@ -350,7 +253,7 @@ int fox_window_self(lua_State* L)
 {
   lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
   int id;
-  lwin->lua_handler()->lookup_name("*", id);
+  lwin->app()->lookup_name("*", id);
   lua_pushinteger(L, id);
   return 1;
 }
