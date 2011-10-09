@@ -31,7 +31,7 @@ public:
 
   FXApp*           app()         { return m_window->getApp(); }
   fox_window*      window()      { return m_window; }
-  fox_lua_handler* lua_handler() { return m_window->lua_handler(); }
+  fox_lua_handler* lua_handler() { return &m_handler; }
 
   int protected_call(lua_State* L, int (lua_fox_window::*method)(lua_State*, err&));
 
@@ -42,6 +42,7 @@ public:
 
 private:
   fox_window* m_window;
+  fox_lua_handler m_handler;
 };
 
 namespace dc_operation {

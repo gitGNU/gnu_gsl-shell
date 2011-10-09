@@ -10,7 +10,7 @@
 
 // unpack the table on top of the stack to assign the handlers:
 // SEL => (envinronment index)
-int parse_handlers(lua_State* L, int env_table_index, fox_lua_handler& hnd, int id)
+int parse_handlers(lua_State* L, int env_table_index, fox_lua_handler* hnd, int id)
 {
   if (!lua_istable(L, -1))
     return (-1);
@@ -28,7 +28,7 @@ int parse_handlers(lua_State* L, int env_table_index, fox_lua_handler& hnd, int 
     printf("Assigning handler #%i, selector: (%u, %u)\n", k, sel, id);
 
     lua_rawgeti(L, -1, 2);
-    int env_index = hnd.assign_handler(FXSEL(sel,fox_id));
+    int env_index = hnd->assign_handler(FXSEL(sel,fox_id));
     lua_rawseti(L, env_table_index, env_index);
 
     lua_pop(L, 1);
@@ -37,13 +37,13 @@ int parse_handlers(lua_State* L, int env_table_index, fox_lua_handler& hnd, int 
   return (int) fox_id;
 }
 
-void window_build(lua_State* L, fox_lua_handler& hnd, FXTopWindow* win, int win_id)
+void window_build(lua_State* L, fox_lua_handler* hnd, FXTopWindow* win, int win_id)
 {
   /* position in the Lua stack of the environment table for the window */
   const int env_table_index = 3;
 
-  hnd.bind(win_id, new gui_composite(win));
-  hnd.map("*", win_id);
+  hnd->bind(win_id, new gui_composite(win));
+  hnd->map("*", win_id);
 
   int n = lua_objlen(L, -1);
 
@@ -55,7 +55,7 @@ void window_build(lua_State* L, fox_lua_handler& hnd, FXTopWindow* win, int win_
     const char* name = get_string_field(L, "name");
 
     int parent_id = get_int_field(L, "parent");
-    FXComposite* parent = hnd.lookup(parent_id)->as_composite();
+    FXComposite* parent = hnd->lookup(parent_id)->as_composite();
 
     assert(parent);
 
@@ -152,7 +152,7 @@ void window_build(lua_State* L, fox_lua_handler& hnd, FXTopWindow* win, int win_
 	int opts = get_int_element(L, 3);
 	lua_pop(L, 1);
 
-	gui_element* menu_pane_el = hnd.lookup(menu_pane_id);
+	gui_element* menu_pane_el = hnd->lookup(menu_pane_id);
 
 	if (!menu_pane_el)
 	  luaL_error(L, "error in menu construction");
@@ -166,7 +166,7 @@ void window_build(lua_State* L, fox_lua_handler& hnd, FXTopWindow* win, int win_
     case gui::menu_pane:
       {
 	FXMenuPane* mp = new FXMenuPane(parent);
-	hnd.add_resource(mp);
+	hnd->add_resource(mp);
 	elem = new gui_composite(mp);
 	break;
       }
@@ -189,9 +189,9 @@ void window_build(lua_State* L, fox_lua_handler& hnd, FXTopWindow* win, int win_
       luaL_error(L, "unknown type_id code: %i", type_id);
     }
 
-    hnd.bind(id, elem);
+    hnd->bind(id, elem);
 
-    if (name) hnd.map(name, id);
+    if (name) hnd->map(name, id);
 
     lua_pop(L, 1);
   }
@@ -199,7 +199,7 @@ void window_build(lua_State* L, fox_lua_handler& hnd, FXTopWindow* win, int win_
 
 long fox_window::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr)
 {
-  long status = m_handler.handle(sender, sel, ptr);
+  long status = m_handler->handle(sender, sel, ptr);
   if (status == 0)
     return FXMainWindow::handle(sender, sel, ptr);
   return status;

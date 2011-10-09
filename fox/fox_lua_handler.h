@@ -29,12 +29,17 @@ public:
       delete obj;
     }
 
+    delete m_current_dc;
+
+    free_resources();
+  }
+
+  void free_resources() {
     for (list<FXObject*>* p = m_resources; p; p = p->next()) {
       FXObject* obj = p->content();
       delete obj;
     }
-
-    delete m_current_dc;
+    m_resources = 0;
   }
 
   virtual long handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr);

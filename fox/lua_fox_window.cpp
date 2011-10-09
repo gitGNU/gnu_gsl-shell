@@ -69,11 +69,13 @@ int fox_window_new(lua_State* L)
 
     lua_fox_window* lwin = (lua_fox_window*) gs_new_object(sizeof(lua_fox_window), L, GS_FOX_WINDOW);
 
+    new((void*) lwin) lua_fox_window();
+
     lua_newtable(L);
     lua_getfield(L, -3, "body");
 
-    FXApp* app = new FXApp("GSL Shell FOX Window");
-    fox_window* win = new fox_window(L, app, title, id, opts, width, height);
+    FXApp* app = new FXApp("GSL Shell", "Francesco Abbate");
+    fox_window* win = new fox_window(L, app, lwin->lua_handler(), title, id, opts, width, height);
 
     lwin->init(win);
 

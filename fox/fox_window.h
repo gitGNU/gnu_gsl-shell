@@ -11,24 +11,24 @@ __BEGIN_DECLS
 #include "lua.h"
 __END_DECLS
 
-extern void window_build(lua_State* L, fox_lua_handler& hnd, FXTopWindow* win, int win_id);
+extern void window_build(lua_State* L, fox_lua_handler* hnd, FXTopWindow* win, int win_id);
 
 class fox_window : public FXMainWindow {
 public:
-  fox_window(lua_State* L, FXApp* app, const char* title,
+  fox_window(lua_State* L, FXApp* app, fox_lua_handler* hnd, const char* title,
 	     int id, int opts, int w, int h) 
-    : FXMainWindow(app, title, NULL, NULL, opts, 0, 0, w, h)
+    : FXMainWindow(app, title, NULL, NULL, opts, 0, 0, w, h), m_handler(hnd)
   {
-    window_build(L, m_handler, this, id);
+    window_build(L, hnd, this, id);
   }
+
+  virtual ~fox_window() { m_handler->free_resources(); }
 
   virtual long handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr);
   virtual void create();
 
-  fox_lua_handler* lua_handler() { return &m_handler; }
-
 private:
-  fox_lua_handler m_handler;
+  fox_lua_handler* m_handler;
 };
 
 #endif
