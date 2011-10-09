@@ -37,7 +37,7 @@ int parse_handlers(lua_State* L, int env_table_index, fox_lua_handler& hnd, int 
   return (int) fox_id;
 }
 
-void fox_window::window_build(lua_State* L, fox_lua_handler& hnd, fox_window* win, int win_id)
+void window_build(lua_State* L, fox_lua_handler& hnd, FXTopWindow* win, int win_id)
 {
   /* position in the Lua stack of the environment table for the window */
   const int env_table_index = 3;
@@ -166,7 +166,7 @@ void fox_window::window_build(lua_State* L, fox_lua_handler& hnd, fox_window* wi
     case gui::menu_pane:
       {
 	FXMenuPane* mp = new FXMenuPane(parent);
-	win->add_resource(mp);
+	hnd.add_resource(mp);
 	elem = new gui_composite(mp);
 	break;
       }

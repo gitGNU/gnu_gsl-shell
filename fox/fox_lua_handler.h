@@ -18,7 +18,8 @@ class fox_lua_handler {
 public:
   fox_lua_handler() : 
     m_L(0), m_thread_id(-1), m_env_handler_index(0),
-    m_current_event(0), m_current_dc(0), m_gsl_shell_locked(false)
+    m_current_event(0), m_current_dc(0), m_gsl_shell_locked(false),
+    m_resources(0)
   { }
 
   ~fox_lua_handler() {
@@ -28,10 +29,19 @@ public:
       delete obj;
     }
 
+    for (list<FXObject*>* p = m_resources; p; p = p->next()) {
+      FXObject* obj = p->content();
+      delete obj;
+    }
+
     delete m_current_dc;
   }
 
   virtual long handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr);
+
+  void add_resource(FXObject* obj) {
+    m_resources = new list<FXObject*>(obj, m_resources);
+  }
 
   void bind(int id, gui_element* obj) { m_objects.insert(id, obj); }
   void map(const char* name, int id) { m_symbols.insert(name, id); }
@@ -78,6 +88,7 @@ private:
   FXDCWindow* m_current_dc;
 
   bool m_gsl_shell_locked;
+  list<FXObject*>* m_resources;
 };
 
 #endif

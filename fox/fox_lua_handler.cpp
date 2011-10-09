@@ -17,7 +17,7 @@ long fox_lua_handler::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr)
 
     if (need_locking) {
       GSL_SHELL_LOCK();
-      m_shell_shell_locked = true;
+      m_gsl_shell_locked = true;
     }
 
     lua_State* L = m_L;
@@ -41,7 +41,7 @@ long fox_lua_handler::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr)
 
     if (need_locking) {
       GSL_SHELL_UNLOCK();
-      m_shell_shell_locked = false;
+      m_gsl_shell_locked = false;
     }
       
     return (err == 0 ? 1 : 0);
