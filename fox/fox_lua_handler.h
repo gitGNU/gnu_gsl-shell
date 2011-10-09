@@ -18,7 +18,7 @@ class fox_lua_handler {
 public:
   fox_lua_handler() : 
     m_L(0), m_thread_id(-1), m_env_handler_index(0),
-    m_current_event(0), m_current_dc(0)
+    m_current_event(0), m_current_dc(0), m_gsl_shell_locked(false)
   { }
 
   ~fox_lua_handler() {
@@ -76,6 +76,8 @@ private:
 
   FXEvent* m_current_event;
   FXDCWindow* m_current_dc;
+
+  bool m_gsl_shell_locked;
 };
 
 #endif
