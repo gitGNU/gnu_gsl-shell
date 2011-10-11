@@ -31,4 +31,21 @@ private:
   fox_lua_handler* m_handler;
 };
 
+class fox_dialog : public FXDialogBox {
+public:
+  fox_dialog(lua_State* L, FXApp* app, fox_lua_handler* hnd, const char* title,
+	     int id, int opts, int w, int h) 
+    : FXDialogBox(app, title, opts, 0, 0, w, h), m_handler(hnd)
+  {
+    window_build(L, hnd, this, id);
+  }
+
+  virtual ~fox_dialog() { m_handler->free_resources(); }
+
+  virtual long handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr);
+
+private:
+  fox_lua_handler* m_handler;
+};
+
 #endif

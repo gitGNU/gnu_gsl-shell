@@ -17,6 +17,7 @@ namespace gui {
     menu_title,
     menu_pane,
     menu_command,
+    dialog_box,
   };
 
   enum method_e {

@@ -14,12 +14,24 @@ __BEGIN_DECLS
 
 __END_DECLS
 
+
+class thread_interp_locker {
+public:
+  thread_interp_locker() : m_nest(0) {}
+
+  void lock();
+  void unlock();
+
+private:
+  int m_nest;
+};
+
 class fox_lua_handler {
 public:
-  fox_lua_handler() : 
-    m_L(0), m_thread_id(-1), m_env_handler_index(0),
-    m_current_event(0), m_current_dc(0), m_gsl_shell_locked(false),
-    m_resources(0)
+  fox_lua_handler(FXuint id_last) : 
+    m_L(0), m_thread_id(-1),
+    m_env_handler_index(0), m_current_event(0), m_current_dc(0),
+    m_resources(0), m_nb_retval(0), m_id_last(id_last), m_interp_lock(0)
   { }
 
   ~fox_lua_handler() {
@@ -71,7 +83,7 @@ public:
 
   int assign_handler(FX::FXuint sel);
 
-  void set_lua_state(lua_State* L, int thread_id) { 
+  void set_lua_state(lua_State* L, int thread_id = -1) { 
     m_L = L;
     m_thread_id = thread_id;
   }
@@ -79,7 +91,21 @@ public:
   lua_State* lua_state()     { return m_L; }
   int        lua_thread_id() { return m_thread_id; }
 
+  int  nb_return_values() const { return m_nb_retval; }
+  void add_return_values(int n) { m_nb_retval = n; }
+
+  FXuint id_last() const { return m_id_last; }
+
+  thread_interp_locker* locker() { return m_interp_lock; }
+  void set_locker(thread_interp_locker* locker) { m_interp_lock = locker; }
+
 private:
+  void inherit(const fox_lua_handler* parent) {
+    m_L = parent->m_L;
+    m_thread_id = parent->m_thread_id;
+    m_interp_lock = parent->m_interp_lock;
+  }
+
   dict<int, gui_element*> m_objects;
   dict<FXString, int> m_symbols;
 
@@ -92,8 +118,12 @@ private:
   FXEvent* m_current_event;
   FXDCWindow* m_current_dc;
 
-  bool m_gsl_shell_locked;
   list<FXObject*>* m_resources;
+
+  int m_nb_retval;
+  FXuint m_id_last;
+
+  thread_interp_locker* m_interp_lock;
 };
 
 #endif

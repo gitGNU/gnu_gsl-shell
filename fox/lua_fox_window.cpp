@@ -2,6 +2,7 @@
 #include <assert.h>
 
 #include "lua_fox_window.h"
+#include "fox_window.h"
 #include "gui-types.h"
 #include "gs-types.h"
 #include "lua-cpp-utils.h"
@@ -21,6 +22,9 @@ static int fox_window_event(lua_State* L);
 static int fox_window_get_dc(lua_State* L);
 static int fox_window_dc_handle(lua_State* L);
 static int fox_window_self(lua_State* L);
+static int fox_window_dialog_create(lua_State* L);
+static int fox_window_execute(lua_State* L);
+static int fox_window_yield(lua_State* L);
 
 static const struct luaL_Reg fox_window_functions[] = {
   {"fox_window", fox_window_new},
@@ -30,6 +34,9 @@ static const struct luaL_Reg fox_window_functions[] = {
 static const struct luaL_Reg fox_window_methods[] = {
   {"run",       fox_window_run},
   {"element",   fox_window_get_element},
+  {"dialog",    fox_window_dialog_create},
+  {"execute",   fox_window_execute},
+  {"yield",     fox_window_yield},
   {"handle",    fox_window_handle_msg},
   {"self",      fox_window_self},
   {"event",     fox_window_event},
@@ -41,12 +48,20 @@ static const struct luaL_Reg fox_window_methods[] = {
 
 __END_DECLS
 
-typedef lua_thread_info<lua_fox_window> thread_info;
+enum {
+  FOX_MAIN_WINDOW_INDEX = (1 << 16),
+  FOX_RET_VALUES_INDEX,
+};
 
 lua_fox_window::~lua_fox_window()
 {
-  if (status == not_started || status == error)
-    delete this->app();
+  printf("deleting lua_fox_window object: %p\n", this);
+  if (m_is_main) {
+    if (status == not_started || status == error)
+      delete this->app();
+  } else {
+    delete this->m_window;
+  }
 }
 
 int fox_window_new(lua_State* L)
@@ -69,7 +84,7 @@ int fox_window_new(lua_State* L)
 
     lua_fox_window* lwin = (lua_fox_window*) gs_new_object(sizeof(lua_fox_window), L, GS_FOX_WINDOW);
 
-    new((void*) lwin) lua_fox_window();
+    new((void*) lwin) lua_fox_window(fox_window::ID_LAST, true);
 
     lua_newtable(L);
     lua_getfield(L, -3, "body");
@@ -88,11 +103,149 @@ int fox_window_new(lua_State* L)
   return luaL_error (L, "invalid contructor type_id: %i", type_id);
 }
 
+int fox_window_dialog_create(lua_State* L)
+{
+  lua_fox_window* lmainwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
+
+  int type_id = get_int_field(L, "type_id");
+  int id      = get_int_field(L, "id");
+
+  if (type_id == gui::dialog_box) {
+    lua_getfield(L, -1, "args");
+
+    lua_rawgeti(L, -1, 1);
+    const char* title = lua_tostring(L, -1);
+    lua_pop(L, 1);
+
+    int opts   = get_int_element(L, 2);
+    int width  = get_int_element(L, 3);
+    int height = get_int_element(L, 4);
+      
+    lua_pop(L, 1);
+
+    lua_fox_window* lwin = (lua_fox_window*) gs_new_object(sizeof(lua_fox_window), L, GS_FOX_WINDOW);
+
+    new((void*) lwin) lua_fox_window(fox_dialog::ID_LAST, false);
+
+    lwin->lua_handler()->set_locker(lmainwin->lua_handler()->locker());
+
+    lua_newtable(L);
+    lua_getfield(L, -3, "body");
+
+    fox_dialog* win = new fox_dialog(L, lmainwin->app(), lwin->lua_handler(), title, id, opts, width, height);
+
+    lwin->init(win);
+
+    lua_pop(L, 1);
+
+    lua_pushvalue(L, 1);
+    lua_rawseti(L, -2, FOX_MAIN_WINDOW_INDEX);
+
+    lua_setfenv(L, -2);
+
+    return 1;
+  }
+
+  return luaL_error (L, "invalid contructor type_id: %i", type_id);
+}
+
+static int fox_window_run_modal(lua_State* L)
+{
+  lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
+  FXTopWindow* win = lwin->window();
+  FXApp* app = lwin->app();
+
+  lua_getfenv(L, 1);
+  lua_rawgeti(L, -1, FOX_MAIN_WINDOW_INDEX);
+
+  lua_insert(L, 1);
+  lua_settop(L, 1);
+
+  lwin->status = lua_fox_window::running;
+
+  win->create();
+  win->show(PLACEMENT_CURSOR);
+  app->refresh();
+  app->runModalFor(win);
+
+  return 0;
+}
+
+int fox_window_execute(lua_State* L)
+{
+  lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
+
+  lua_State* new_L = lua_newthread(L);
+
+  lwin->lua_handler()->set_lua_state(new_L);
+
+  lua_pushvalue(L, 1);
+  lua_xmove(L, new_L, 1);
+
+  lua_pushcfunction(L, fox_window_run_modal);
+  lua_pushvalue(L, 1);
+  lua_call(L, 1, 0);
+
+  lua_getfenv(L, 1);
+  lua_rawgeti(L, -1, FOX_MAIN_WINDOW_INDEX);
+  lua_getfenv(L, -1);
+
+  lua_rawgeti(L, -1, FOX_RET_VALUES_INDEX);
+  int n = lua_tointeger(L, -1);
+  lua_pop(L, 1);
+
+  for (int k = 1; k <= n; k++) {
+    lua_rawgeti(L, -k, FOX_RET_VALUES_INDEX + k);
+  }
+
+  return n;
+}
+
+int fox_window_yield(lua_State* L)
+{
+  lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
+  FXTopWindow* win = lwin->window();
+  FXApp* app = lwin->app();
+  int n = lua_gettop(L) - 1;
+
+  lua_getfenv(L, 1);
+  lua_rawgeti(L, -1, FOX_MAIN_WINDOW_INDEX);
+  lua_getfenv(L, -1);
+  lua_pushinteger(L, n);
+  lua_rawseti(L, -2, FOX_RET_VALUES_INDEX);
+
+  lua_insert(L, 2);
+  lua_pop(L, 2);
+
+  for (int k = n; k >= 1; k--) {
+    lua_rawseti(L, 2, FOX_RET_VALUES_INDEX + k);
+  }
+  lua_pop(L, 1);
+
+  app->stopModal(win);
+  win->hide();
+  return n;
+}
+
 int fox_window_free(lua_State* L)
 {
   lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
   lwin->~lua_fox_window();
   return 0;
+}
+
+void thread_interp_locker::lock()
+{
+  if (m_nest == 0)
+    GSL_SHELL_LOCK();
+  m_nest ++;
+}
+
+void thread_interp_locker::unlock()
+{
+  m_nest --;
+  if (m_nest == 0)
+    GSL_SHELL_UNLOCK();
 }
 
 static void *
@@ -101,6 +254,9 @@ fox_window_thread_function (void *_inf)
   lua_fox_window* lwin = (lua_fox_window*) _inf;
   fox_lua_handler* lua_handler = lwin->lua_handler();
   FXApp* app = lwin->app();
+  thread_interp_locker locker;
+
+  lua_handler->set_locker(&locker);
 
   lua_State* L = lua_handler->lua_state();
 

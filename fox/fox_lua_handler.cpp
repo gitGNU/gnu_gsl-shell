@@ -13,12 +13,7 @@ long fox_lua_handler::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr)
       m_current_event = (FXEvent*) ptr;
     }
 
-    bool need_locking = !m_gsl_shell_locked;
-
-    if (need_locking) {
-      GSL_SHELL_LOCK();
-      m_gsl_shell_locked = true;
-    }
+    m_interp_lock->lock();
 
     lua_State* L = m_L;
     // here we assume that we always have a lua_fox_window object
@@ -39,10 +34,7 @@ long fox_lua_handler::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr)
 
     close_handler_call();
 
-    if (need_locking) {
-      GSL_SHELL_UNLOCK();
-      m_gsl_shell_locked = false;
-    }
+    m_interp_lock->unlock();
       
     return (err == 0 ? 1 : 0);
   }

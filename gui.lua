@@ -22,6 +22,7 @@ local GUI = {
    MENU_TITLE       = 9,
    MENU_PANE        = 10,
    MENU_COMMAND     = 11,
+   DIALOG_BOX       = 12,
 }
 
 local function parse_gen_options(table, opts)
@@ -102,6 +103,18 @@ function M.MainWindow(spec)
       id = get_element_id(),
       name = spec.name,
       args = {spec.title or 'Test Window', DECOR.ALL, w or 0, h or 0}
+   }
+   ctor.body = parse_childs(nil, ctor.id, spec)
+   return ctor
+end
+
+function M.Dialog(spec)
+   local w, h = spec.width or 640, spec.height or 480
+   local ctor = { 
+      type_id = GUI.DIALOG_BOX,
+      id = get_element_id(),
+      name = spec.name,
+      args = {spec.title or 'Test Dialog', DECOR.ALL, w or 0, h or 0}
    }
    ctor.body = parse_childs(nil, ctor.id, spec)
    return ctor

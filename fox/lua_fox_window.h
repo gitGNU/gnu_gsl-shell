@@ -4,7 +4,6 @@
 #include <fx.h>
 
 #include "defs.h"
-#include "fox_window.h"
 #include "fox_lua_handler.h"
 #include "gui_element.h"
 
@@ -21,16 +20,17 @@ class lua_fox_window {
 public:
   enum win_status_e { not_started, starting, running, error, closed };
 
-  lua_fox_window() : status(not_started), m_window(0) {}
+  lua_fox_window(FXuint id_last, bool is_main_window) : 
+    status(not_started), m_window(0), m_handler(id_last), 
+    m_is_main(is_main_window) 
+  {}
 
   ~lua_fox_window();
 
-  void init(fox_window* win) {
-    m_window = win;
-  }
+  void init(FXTopWindow* win) { m_window = win; }
 
   FXApp*           app()         { return m_window->getApp(); }
-  fox_window*      window()      { return m_window; }
+  FXTopWindow*     window()      { return m_window; }
   fox_lua_handler* lua_handler() { return &m_handler; }
 
   int protected_call(lua_State* L, int (lua_fox_window::*method)(lua_State*, err&));
@@ -41,8 +41,9 @@ public:
   enum win_status_e status;
 
 private:
-  fox_window* m_window;
+  FXTopWindow* m_window;
   fox_lua_handler m_handler;
+  bool m_is_main;
 };
 
 namespace dc_operation {

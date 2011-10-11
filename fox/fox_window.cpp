@@ -15,7 +15,7 @@ int parse_handlers(lua_State* L, int env_table_index, fox_lua_handler* hnd, int 
   if (!lua_istable(L, -1))
     return (-1);
 
-  FX::FXuint fox_id = FXMainWindow::ID_LAST + id;
+  FX::FXuint fox_id = hnd->id_last() + id;
 
   int hn = lua_objlen(L, -1);
   for (int k = 1; k <= hn; k++) {
@@ -24,8 +24,6 @@ int parse_handlers(lua_State* L, int env_table_index, fox_lua_handler* hnd, int 
     lua_rawgeti(L, -1, 1);
     FX::FXuint sel = lua_tointeger(L, -1);
     lua_pop(L, 1);
-
-    printf("Assigning handler #%i, selector: (%u, %u)\n", k, sel, id);
 
     lua_rawgeti(L, -1, 2);
     int env_index = hnd->assign_handler(FXSEL(sel,fox_id));
@@ -40,7 +38,7 @@ int parse_handlers(lua_State* L, int env_table_index, fox_lua_handler* hnd, int 
 void window_build(lua_State* L, fox_lua_handler* hnd, FXTopWindow* win, int win_id)
 {
   /* position in the Lua stack of the environment table for the window */
-  const int env_table_index = 3;
+  int env_table_index = lua_gettop(L) - 1;
 
   hnd->bind(win_id, new gui_composite(win));
   hnd->map("*", win_id);
@@ -69,7 +67,6 @@ void window_build(lua_State* L, fox_lua_handler* hnd, FXTopWindow* win, int win_
 	lua_pop(L, 1);
 	FXHorizontalFrame* hf = new FXHorizontalFrame(parent, opts);
 	elem = new gui_composite(hf);
-	printf("Adding horizontal frame (id=%i) to object id= %i\n", id, parent_id);
 	break;
       }
     case gui::vertical_frame: 
@@ -79,7 +76,6 @@ void window_build(lua_State* L, fox_lua_handler* hnd, FXTopWindow* win, int win_
 	lua_pop(L, 1);
 	FXVerticalFrame* hf = new FXVerticalFrame(parent, opts);
 	elem = new gui_composite(hf);
-	printf("Adding vertical frame (id=%i) to object id= %i\n", id, parent_id);
 	break;
       }
     case gui::button:
@@ -96,7 +92,6 @@ void window_build(lua_State* L, fox_lua_handler* hnd, FXTopWindow* win, int win_
 	FXButton* b = new FXButton(parent, text, NULL, target, hid);
 
 	elem = new gui_window(b);
-	printf("Adding button (id=%i) to object id= %i\n", id, parent_id);
 	break;
       }
     case gui::text_field:
@@ -106,7 +101,6 @@ void window_build(lua_State* L, fox_lua_handler* hnd, FXTopWindow* win, int win_
 	lua_pop(L, 1);
 	FXTextField* tf = new FXTextField(parent, columns);
 	elem = new text_field(tf);
-	printf("Adding text field (id=%i) to object id= %i\n", id, parent_id);
 	break;
       }
     case gui::label:
@@ -131,7 +125,6 @@ void window_build(lua_State* L, fox_lua_handler* hnd, FXTopWindow* win, int win_
 	FXObject* target = (hid >= 0 ? win : NULL);
 	FXCanvas* canvas = new FXCanvas(parent, target, hid, opts);
 	elem = new gui_window(canvas);
-	printf("Adding canvas (id=%i) to object id= %i\n", id, parent_id);
 	break;
       }
     case gui::menu_bar:
@@ -209,4 +202,12 @@ void fox_window::create()
 {
   FXMainWindow::create();
   show(PLACEMENT_SCREEN);
+}
+
+long fox_dialog::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr)
+{
+  long status = m_handler->handle(sender, sel, ptr);
+  if (status == 0)
+    return FXDialogBox::handle(sender, sel, ptr);
+  return status;
 }
