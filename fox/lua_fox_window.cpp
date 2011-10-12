@@ -170,6 +170,17 @@ static int fox_window_run_modal(lua_State* L)
   return 0;
 }
 
+/* retrieve the FENV associated to the main window of the window located
+   at "index" */
+static void get_main_window_fenv(lua_State* L, int index)
+{
+  lua_getfenv(L, index);
+  lua_rawgeti(L, -1, FOX_MAIN_WINDOW_INDEX);
+  lua_getfenv(L, -1);
+  lua_insert(L, -3);
+  lua_pop(L, 2);
+}
+
 int fox_window_execute(lua_State* L)
 {
   lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
@@ -185,9 +196,7 @@ int fox_window_execute(lua_State* L)
   lua_pushvalue(L, 1);
   lua_call(L, 1, 0);
 
-  lua_getfenv(L, 1);
-  lua_rawgeti(L, -1, FOX_MAIN_WINDOW_INDEX);
-  lua_getfenv(L, -1);
+  get_main_window_fenv(L, 1);
 
   lua_rawgeti(L, -1, FOX_RET_VALUES_INDEX);
   int n = lua_tointeger(L, -1);
@@ -206,19 +215,18 @@ int fox_window_yield(lua_State* L)
   FXTopWindow* win = lwin->window();
   FXApp* app = lwin->app();
   int n = lua_gettop(L) - 1;
+  
+  get_main_window_fenv(L, 1);
 
-  lua_getfenv(L, 1);
-  lua_rawgeti(L, -1, FOX_MAIN_WINDOW_INDEX);
-  lua_getfenv(L, -1);
   lua_pushinteger(L, n);
   lua_rawseti(L, -2, FOX_RET_VALUES_INDEX);
 
   lua_insert(L, 2);
-  lua_pop(L, 2);
 
   for (int k = n; k >= 1; k--) {
     lua_rawseti(L, 2, FOX_RET_VALUES_INDEX + k);
   }
+
   lua_pop(L, 1);
 
   app->stopModal(win);
