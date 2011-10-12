@@ -55,12 +55,11 @@ enum {
 
 lua_fox_window::~lua_fox_window()
 {
-  printf("deleting lua_fox_window object: %p\n", this);
-  if (m_is_main) {
-    if (status == not_started || status == error)
+  if (status == not_started || status == error) {
+    if (m_is_main)
       delete this->app();
-  } else {
-    delete this->m_window;
+    else
+      delete this->m_window;
   }
 }
 
@@ -224,6 +223,9 @@ int fox_window_yield(lua_State* L)
 
   app->stopModal(win);
   win->hide();
+
+  lwin->dispose_window();
+
   return n;
 }
 

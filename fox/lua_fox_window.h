@@ -38,6 +38,11 @@ public:
   int handle_msg (lua_State* L, err& st);
   int dc_handle  (lua_State* L, err& st);
 
+  void dispose_window() {
+    delete m_window;
+    status = closed;
+  }
+
   enum win_status_e status;
 
 private:
