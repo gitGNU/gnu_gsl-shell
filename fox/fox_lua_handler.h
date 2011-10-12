@@ -1,6 +1,8 @@
 #ifndef FOX_LUA_HANDLER_H
 #define FOX_LUA_HANDLER_H
 
+#include <memory>
+
 #include <fx.h>
 
 #include "defs.h"
@@ -27,6 +29,7 @@ private:
 };
 
 class fox_lua_handler {
+  typedef std::auto_ptr<FXObject> auto_obj;
 public:
   fox_lua_handler(FXuint id_last) : 
     m_L(0), m_thread_id(-1),
@@ -47,17 +50,15 @@ public:
   }
 
   void free_resources() {
-    for (list<FXObject*>* p = m_resources; p; p = p->next()) {
-      FXObject* obj = p->content();
-      delete obj;
-    }
+    list<auto_obj>::free(m_resources);
     m_resources = 0;
   }
 
   virtual long handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr);
 
   void add_resource(FXObject* obj) {
-    m_resources = new list<FXObject*>(obj, m_resources);
+    auto_obj ref(obj);
+    m_resources = new list<auto_obj>(ref, m_resources);
   }
 
   void bind(int id, gui_element* obj) { m_objects.insert(id, obj); }
@@ -118,7 +119,7 @@ private:
   FXEvent* m_current_event;
   FXDCWindow* m_current_dc;
 
-  list<FXObject*>* m_resources;
+  list<auto_obj>* m_resources;
 
   int m_nb_retval;
   FXuint m_id_last;

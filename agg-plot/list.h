@@ -8,6 +8,7 @@ class list {
 
 public:
   list(const T& c, list* next = 0) : m_content(c), m_next(next) { };
+  list(      T& c, list* next = 0) : m_content(c), m_next(next) { };
 
         T& content()       { return m_content; };
   const T& content() const { return m_content; };
