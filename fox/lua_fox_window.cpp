@@ -56,10 +56,10 @@ enum {
 lua_fox_window::~lua_fox_window()
 {
   if (status == not_started || status == error) {
-    if (m_is_main)
-      delete this->app();
-    else
+    if (m_is_dialog)
       delete this->m_window;
+    else
+      delete this->app();
   }
 }
 
@@ -83,7 +83,7 @@ int fox_window_new(lua_State* L)
 
     lua_fox_window* lwin = (lua_fox_window*) gs_new_object(sizeof(lua_fox_window), L, GS_FOX_WINDOW);
 
-    new((void*) lwin) lua_fox_window(fox_window::ID_LAST, true);
+    new((void*) lwin) lua_fox_window(fox_window::ID_LAST, false);
 
     lua_newtable(L);
     lua_getfield(L, -3, "body");
@@ -99,7 +99,7 @@ int fox_window_new(lua_State* L)
     return 1;
   }
 
-  return luaL_error (L, "invalid contructor type_id: %i", type_id);
+  return luaL_error (L, "invalid contructor type_id: %d", type_id);
 }
 
 int fox_window_dialog_create(lua_State* L)
@@ -124,7 +124,7 @@ int fox_window_dialog_create(lua_State* L)
 
     lua_fox_window* lwin = (lua_fox_window*) gs_new_object(sizeof(lua_fox_window), L, GS_FOX_WINDOW);
 
-    new((void*) lwin) lua_fox_window(fox_dialog::ID_LAST, false);
+    new((void*) lwin) lua_fox_window(fox_dialog::ID_LAST, true);
 
     lwin->lua_handler()->set_locker(lmainwin->lua_handler()->locker());
 
@@ -145,7 +145,7 @@ int fox_window_dialog_create(lua_State* L)
     return 1;
   }
 
-  return luaL_error (L, "invalid contructor type_id: %i", type_id);
+  return luaL_error (L, "invalid contructor type_id: %d", type_id);
 }
 
 static int fox_window_run_modal(lua_State* L)
@@ -185,6 +185,10 @@ int fox_window_execute(lua_State* L)
 {
   lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
 
+  if (!lwin->is_dialog() || lwin->status != lua_fox_window::not_started) {
+    return luaL_error(L, "invalid dialog window");
+  }
+
   lua_State* new_L = lua_newthread(L);
 
   lwin->lua_handler()->set_lua_state(new_L);
@@ -212,6 +216,11 @@ int fox_window_execute(lua_State* L)
 int fox_window_yield(lua_State* L)
 {
   lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
+
+  if (!lwin->is_dialog() || lwin->status != lua_fox_window::running) {
+    return luaL_error(L, "invalid dialog window");
+  }
+
   FXTopWindow* win = lwin->window();
   FXApp* app = lwin->app();
   int n = lua_gettop(L) - 1;
@@ -440,7 +449,7 @@ int fox_window_event(lua_State* L)
       lua_pushinteger(L, (int) r.h);
       nrv += 3;
     } else {
-      luaL_error(L, "unrecognized event id: %i", event_index);
+      luaL_error(L, "unrecognized event id: %d", event_index);
     }
 
     if (ptr) {

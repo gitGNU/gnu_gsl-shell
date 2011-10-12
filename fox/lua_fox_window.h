@@ -20,9 +20,9 @@ class lua_fox_window {
 public:
   enum win_status_e { not_started, starting, running, error, closed };
 
-  lua_fox_window(FXuint id_last, bool is_main_window) : 
+  lua_fox_window(FXuint id_last, bool is_dialog) : 
     status(not_started), m_window(0), m_handler(id_last), 
-    m_is_main(is_main_window) 
+    m_is_dialog(is_dialog) 
   {}
 
   ~lua_fox_window();
@@ -38,6 +38,8 @@ public:
   int handle_msg (lua_State* L, err& st);
   int dc_handle  (lua_State* L, err& st);
 
+  bool is_dialog() const { return m_is_dialog; }
+
   void dispose_window() {
     delete m_window;
     status = closed;
@@ -48,7 +50,7 @@ public:
 private:
   FXTopWindow* m_window;
   fox_lua_handler m_handler;
-  bool m_is_main;
+  bool m_is_dialog;
 };
 
 namespace dc_operation {
