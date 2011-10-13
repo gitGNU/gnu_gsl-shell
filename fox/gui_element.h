@@ -44,6 +44,15 @@ public:
     case gui::disable:
       m_widget->handle(app, FXSEL(SEL_COMMAND,FXWindow::ID_DISABLE), NULL);
       break;
+    case gui::check:
+      m_widget->handle(app, FXSEL(SEL_COMMAND,FXWindow::ID_CHECK), NULL);
+      break;
+    case gui::uncheck:
+      m_widget->handle(app, FXSEL(SEL_COMMAND,FXWindow::ID_UNCHECK), NULL);
+      break;
+    case gui::set_unknown:
+      m_widget->handle(app, FXSEL(SEL_COMMAND,FXWindow::ID_UNKNOWN), NULL);
+      break;
     default:
       st.error("not implemented", "gui element method");
     }

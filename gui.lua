@@ -23,6 +23,8 @@ local GUI = {
    MENU_PANE        = 10,
    MENU_COMMAND     = 11,
    DIALOG_BOX       = 12,
+   RADIO_BUTTON     = 13,
+   CHECK_BUTTON     = 14,
 }
 
 local function parse_gen_options(table, opts)
@@ -173,6 +175,18 @@ function M.MenuTitle(spec)
 
    ctors[#ctors+1] = mtctor
    return ctors
+end
+
+function M.RadioButton(spec)
+   local ctor = base_ctor(GUI.RADIO_BUTTON, spec)
+   ctor.args = { spec.text or "<Unspecified>" }
+   return { ctor }
+end
+
+function M.CheckButton(spec)
+   local ctor = base_ctor(GUI.CHECK_BUTTON, spec)
+   ctor.args = { spec.text or "<Unspecified>" }
+   return { ctor }
 end
 
 function M.MenuBar(spec)

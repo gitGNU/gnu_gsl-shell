@@ -18,15 +18,20 @@ namespace gui {
     menu_pane,
     menu_command,
     dialog_box,
+    radio_button,
+    check_button,
   };
 
   enum method_e {
-    close         = 0,
-    get_text      = 1,
-    set_text      = 2,
-    get_size      = 3,
-    enable        = 4,
-    disable       = 5,
+    close = 1,
+    get_text,
+    set_text,
+    get_size,
+    enable,
+    disable,
+    check,
+    uncheck,
+    set_unknown,
   };
 
 }

@@ -35,6 +35,31 @@ int parse_handlers(lua_State* L, int env_table_index, fox_lua_handler* hnd, int 
   return (int) fox_id;
 }
 
+static int get_field_as_int(lua_State* L, const char* key)
+{
+  lua_getfield(L, -1, key);
+  int opts = get_int_element(L, 1);
+  lua_pop(L, 1);
+  return opts;
+}
+
+static const char* get_field_as_string(lua_State* L, const char* key)
+{
+  lua_getfield(L, -1, key);
+  const char* text = get_string_element(L, 1);
+  lua_pop(L, 1);
+  return text;
+}
+
+static int get_handlers(lua_State* L, int env_table_index,
+			fox_lua_handler* hnd, int id)
+{
+  lua_getfield(L, -1, "handlers");
+  int hid = parse_handlers(L, env_table_index, hnd, id);
+  lua_pop(L, 1);
+  return hid;
+}
+
 void window_build(lua_State* L, fox_lua_handler* hnd, FXTopWindow* win, int win_id)
 {
   /* position in the Lua stack of the environment table for the window */
@@ -62,32 +87,22 @@ void window_build(lua_State* L, fox_lua_handler* hnd, FXTopWindow* win, int win_
     switch (type_id) {
     case gui::horizontal_frame: 
       {
-	lua_getfield(L, -1, "args");
-	int opts = get_int_element(L, 1);
-	lua_pop(L, 1);
+	int opts = get_field_as_int(L, "args");
 	FXHorizontalFrame* hf = new FXHorizontalFrame(parent, opts);
 	elem = new gui_composite(hf);
 	break;
       }
     case gui::vertical_frame: 
       {
-	lua_getfield(L, -1, "args");
-	int opts = get_int_element(L, 1);
-	lua_pop(L, 1);
+	int opts = get_field_as_int(L, "args");
 	FXVerticalFrame* hf = new FXVerticalFrame(parent, opts);
 	elem = new gui_composite(hf);
 	break;
       }
     case gui::button:
       {
-	lua_getfield(L, -1, "args");
-	const char* text = get_string_element(L, 1);
-	lua_pop(L, 1);
-
-	lua_getfield(L, -1, "handlers");
- 	int hid = parse_handlers(L, env_table_index, hnd, id);
-	lua_pop(L, 1);
-
+	const char* text = get_field_as_string(L, "args");
+	int hid = get_handlers(L, env_table_index, hnd, id);
 	FXObject* target = (hid >= 0 ? win : NULL);
 	FXButton* b = new FXButton(parent, text, NULL, target, hid);
 
@@ -96,32 +111,22 @@ void window_build(lua_State* L, fox_lua_handler* hnd, FXTopWindow* win, int win_
       }
     case gui::text_field:
       {
-	lua_getfield(L, -1, "args");
-	int columns = get_int_element(L, 1);
-	lua_pop(L, 1);
+	int columns = get_field_as_int(L, "args");
 	FXTextField* tf = new FXTextField(parent, columns);
 	elem = new text_field(tf);
 	break;
       }
     case gui::label:
       {
-	lua_getfield(L, -1, "args");
-	const char *text = get_string_element(L, 1);
-	lua_pop(L, 1);
+	const char *text = get_field_as_string(L, "args");
 	FXLabel* label = new FXLabel(parent, text);
 	elem = new gui_window(label);
 	break;
       }
     case gui::canvas:
       {
-	lua_getfield(L, -1, "args");
-	int opts = get_int_element(L, 1);
-	lua_pop(L, 1);
-
-	lua_getfield(L, -1, "handlers");
- 	int hid = parse_handlers(L, env_table_index, hnd, id);
-	lua_pop(L, 1);
-
+	int opts = get_field_as_int(L, "args");
+	int hid = get_handlers(L, env_table_index, hnd, id);
 	FXObject* target = (hid >= 0 ? win : NULL);
 	FXCanvas* canvas = new FXCanvas(parent, target, hid, opts);
 	elem = new gui_window(canvas);
@@ -129,10 +134,7 @@ void window_build(lua_State* L, fox_lua_handler* hnd, FXTopWindow* win, int win_
       }
     case gui::menu_bar:
       {
-	lua_getfield(L, -1, "args");
-	int opts = get_int_element(L, 1);
-	lua_pop(L, 1);
-	
+	int opts = get_field_as_int(L, "args");
 	FXMenuBar* mb = new FXMenuBar(parent, opts);
 	elem = new gui_composite(mb);
 	break;
@@ -165,17 +167,29 @@ void window_build(lua_State* L, fox_lua_handler* hnd, FXTopWindow* win, int win_
       }
     case gui::menu_command:
       {
-	lua_getfield(L, -1, "args");
-	const char* text = get_string_element(L, 1);
-	lua_pop(L, 1);
-
-	lua_getfield(L, -1, "handlers");
- 	int hid = parse_handlers(L, env_table_index, hnd, id);
-	lua_pop(L, 1);
-
+	const char *text = get_field_as_string(L, "args");
+	int hid = get_handlers(L, env_table_index, hnd, id);
 	FXObject* target = (hid >= 0 ? win : NULL);
 	FXMenuCommand* mc = new FXMenuCommand(parent, text, NULL, target, hid);
 	elem = new gui_window(mc);
+	break;
+      }
+    case gui::radio_button:
+      {
+	const char* text = get_field_as_string(L, "args");
+	int hid = get_handlers(L, env_table_index, hnd, id);
+	FXObject* target = (hid >= 0 ? win : NULL);
+	FXRadioButton* b = new FXRadioButton(parent, text, target, hid);
+	elem = new gui_window(b);
+	break;
+      }
+    case gui::check_button:
+      {
+	const char* text = get_field_as_string(L, "args");
+	int hid = get_handlers(L, env_table_index, hnd, id);
+	FXObject* target = (hid >= 0 ? win : NULL);
+	FXCheckButton* b = new FXCheckButton(parent, text, target, hid);
+	elem = new gui_window(b);
 	break;
       }
     default:

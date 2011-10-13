@@ -1,11 +1,14 @@
 
 local OP = {
-   CLOSE         = 0,
-   GET_TEXT      = 1,
-   SET_TEXT      = 2,
-   GET_SIZE      = 3,
-   ENABLE        = 4,
-   DISABLE       = 5,
+   CLOSE         = 1,
+   GET_TEXT      = 2,
+   SET_TEXT      = 3,
+   GET_SIZE      = 4,
+   ENABLE        = 5,
+   DISABLE       = 6,
+   CHECK         = 7,
+   UNCHECK       = 8,
+   SET_UNKNOWN   = 9,
 }
 
 return OP

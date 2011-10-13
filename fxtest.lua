@@ -72,6 +72,25 @@ local dialog = UI.Dialog {
 }   
 
 
+local function radio_button_create(n)
+   local rb_choice = 1
+   local t = {}
+   for i=1, n do
+      t[#t+1] = UI.RadioButton {
+	 name='rb' .. i,
+	 text = 'Choice ' .. i,
+	 onCommand = function(w) rb_choice = i end,
+	 onUpdate  = function(w)
+			local msg = (rb_choice == i and OP.CHECK or OP.UNCHECK)
+			w:handle(w:element('rb' .. i), msg)
+		     end
+      }
+   end
+   return t
+end
+
+rbutton = radio_button_create(3)
+
 ctors = UI.MainWindow {
    title = "Scribble Window",
    width  = 640,
@@ -142,7 +161,11 @@ ctors = UI.MainWindow {
 				    local d = w:dialog(dialog)
 				    print('return', d:execute())
 				 end
-		  }
+		  },
+
+	 rbutton[1], rbutton[2], rbutton[3],
+	 
+	 UI.CheckButton { text = 'Check this' },
       }
    }
 }
