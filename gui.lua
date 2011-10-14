@@ -1,10 +1,11 @@
 
-local bit = require 'bit'
+local bor = (require 'bit').bor
 
-local LAYOUT = require 'fox-layout'
-local DECOR  = require 'fox-decor'
-local FRAME  = require 'fox-frame'
-local SEL    = require 'fox-selector'
+local LAYOUT  = require 'fox-layout'
+local DECOR   = require 'fox-decor'
+local FRAME   = require 'fox-frame'
+local SEL     = require 'fox-selector'
+local OPTIONS = require 'fox-options'
 
 local create = gsl.fox_window
 
@@ -28,20 +29,31 @@ local GUI = {
    COMBO_BOX        = 15,
 }
 
+local BT_OPTS = bor(OPTIONS.JUSTIFY_NORMAL,OPTIONS.ICON_BEFORE_TEXT)
+
+option_default = {
+   LAYOUT = {
+      [GUI.BUTTON] = BT_OPTS,
+      [GUI.CHECK_BUTTON] = BT_OPTS,
+      [GUI.RADIO_BUTTON] = BT_OPTS,
+   },
+   FRAME = {
+      [GUI.BUTTON] = bor(FRAME.RAISED,FRAME.THICK),
+      [GUI.TEXT_FIELD] = bor(FRAME.SUNKEN,FRAME.THICK)
+   },
+}
+
 local function parse_gen_options(table, opts)
    if not opts then return 0 end
    local r = 0
-   for i, name in ipairs(opts) do
-      local x = table[name]
-      r = bit.bor(r, x)
-   end
+   for i, name in ipairs(opts) do r = bor(r, table[name]) end
    return r
 end
 
-local function parse_options(spec)
-   local lay_opts = parse_gen_options(LAYOUT, spec.layout)
-   local sty_opts = parse_gen_options(FRAME,  spec.style)
-   return bit.bor(lay_opts, sty_opts)
+local function parse_options(spec, type_id)
+   local lay_opts = spec.layout and parse_gen_options(LAYOUT, spec.layout) or (option_default.LAYOUT[type_id] or 0)
+   local sty_opts = spec.style and parse_gen_options(FRAME, spec.style) or (option_default.FRAME[type_id] or 0)
+   return bor(lay_opts, sty_opts)
 end
 
 local current_element_id = 0
@@ -85,19 +97,16 @@ local function parse_handlers(spec, id)
    if #hs > 0 then return hs end
 end
 
-local function raw_ctor(type_id)
-   local id = get_element_id()
-   return { type_id = type_id, id = id }
-end
-
 local function base_ctor(type_id, spec)
    local id = get_element_id()
+   local opts = parse_options(spec, type_id)
    local handlers = parse_handlers(spec, id)
    local init_func = spec.onCreate
    return { type_id  = type_id,
 	    id       = id,
 	    name     = spec.name,
 	    handlers = handlers,
+	    options  = opts,
 	    init     = init_func, }
 end
 
@@ -127,14 +136,12 @@ end
 
 function M.VerticalFrame(spec)
    local ctor = base_ctor(GUI.VERTICAL_FRAME, spec)
-   ctor.args = { parse_options(spec) }
    return parse_childs(ctor, ctor.id, spec)
 end
 
 
 function M.HorizontalFrame(spec)
    local ctor = base_ctor(GUI.HORIZONTAL_FRAME, spec)
-   ctor.args = { parse_options(spec) }
    return parse_childs(ctor, ctor.id, spec)
 end
 
@@ -158,7 +165,6 @@ end
 
 function M.Canvas(spec)
    local ctor = base_ctor(GUI.CANVAS, spec)
-   ctor.args = { parse_options(spec) }
    return { ctor }
 end
 
@@ -169,12 +175,16 @@ function M.MenuCommand(spec)
 end
 
 function M.MenuTitle(spec)
+   mtspec = { layout = spec.layout, style = spec.style }
+   spec.layout = nil
+   spec.style = nil
+
    local ctor = base_ctor(GUI.MENU_PANE, spec)
    local ctors = parse_childs(ctor, ctor.id, spec)
 
    -- MenuTitle creator line
-   mtctor = raw_ctor(GUI.MENU_TITLE)
-   mtctor.args = { spec.text or '<Unspecified>', ctor.id, parse_options(spec) }
+   mtctor = base_ctor(GUI.MENU_TITLE, mtspec)
+   mtctor.args = { spec.text or '<Unspecified>', ctor.id }
 
    ctors[#ctors+1] = mtctor
    return ctors
@@ -194,13 +204,12 @@ end
 
 function M.ComboBox(spec)
    local ctor = base_ctor(GUI.COMBO_BOX, spec)
-   ctor.args = { spec.text or "<Unspecified>", parse_options(spec) }
+   ctor.args = { spec.text or "<Unspecified>" }
    return { ctor }
 end
 
 function M.MenuBar(spec)
    local wctor = base_ctor(GUI.MENU_BAR, spec)
-   wctor.args = { parse_options(spec) }
 
    local ctors = parse_childs(wctor, wctor.id, spec)
    for _, c in ipairs(ctors) do
