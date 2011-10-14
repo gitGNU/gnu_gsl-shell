@@ -132,6 +132,7 @@ ctors = UI.MainWindow {
 	    onLeftButtonPress = function() mdflag = true end,
 	    onLeftButtonRelease = function() mdflag = false end,
 	    onMotion = on_move,
+	    onCreate = function(w,id) canvas_id = id end,
 	 }
       },
 
@@ -181,6 +182,3 @@ ctors = UI.MainWindow {
 
 
 win = UI.Create(ctors)
-
-canvas_id = win:element'canvas'
-_G['do_clear'] = do_clear
