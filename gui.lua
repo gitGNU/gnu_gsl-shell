@@ -25,6 +25,7 @@ local GUI = {
    DIALOG_BOX       = 12,
    RADIO_BUTTON     = 13,
    CHECK_BUTTON     = 14,
+   COMBO_BOX        = 15,
 }
 
 local function parse_gen_options(table, opts)
@@ -92,10 +93,12 @@ end
 local function base_ctor(type_id, spec)
    local id = get_element_id()
    local handlers = parse_handlers(spec, id)
+   local init_func = spec.onCreate
    return { type_id  = type_id,
 	    id       = id,
 	    name     = spec.name,
-	    handlers = handlers }
+	    handlers = handlers,
+	    init     = init_func, }
 end
 
 function M.MainWindow(spec)
@@ -186,6 +189,12 @@ end
 function M.CheckButton(spec)
    local ctor = base_ctor(GUI.CHECK_BUTTON, spec)
    ctor.args = { spec.text or "<Unspecified>" }
+   return { ctor }
+end
+
+function M.ComboBox(spec)
+   local ctor = base_ctor(GUI.COMBO_BOX, spec)
+   ctor.args = { spec.text or "<Unspecified>", parse_options(spec) }
    return { ctor }
 end
 

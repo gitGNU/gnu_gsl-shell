@@ -26,6 +26,30 @@ int text_field::handle(lua_State* L, FXApp* app, int method_id, err& st)
   return gui_window::handle(L, app, method_id, st);
 }
 
+int combo_box::handle(lua_State* L, FXApp* app, int method_id, err& st)
+{
+  FXComboBox* w = (FXComboBox*) m_widget;
+
+  switch (method_id) {
+  case gui::append_item:
+    {
+      const char *text = lua_tostring(L, 4);
+      w->appendItem(text);
+      return 0;
+    }
+  case gui::set_nb_visible:
+    {
+      int n = lua_tointeger(L, 4);
+      w->setNumVisible(n);
+      return 0;
+    }
+  default:
+    /* */ ;
+  }
+
+  return gui_window::handle(L, app, method_id, st);
+}
+
 int gui_window::handle(lua_State* L, FXApp* app, int method_id, err& st)
 {
   switch (method_id) {

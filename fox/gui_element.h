@@ -87,4 +87,11 @@ public:
   virtual int handle(lua_State* L, FXApp* app, int method_id, err& st);
 };
 
+class combo_box : public gui_window {
+public:
+  combo_box(FXComboBox* w) : gui_window(w) { }
+
+  virtual int handle(lua_State* L, FXApp* app, int method_id, err& st);
+};
+
 #endif

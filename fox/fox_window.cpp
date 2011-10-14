@@ -60,7 +60,21 @@ static int get_handlers(lua_State* L, int env_table_index,
   return hid;
 }
 
-void window_build(lua_State* L, fox_lua_handler* hnd, FXTopWindow* win, int win_id)
+static void parse_init_function(lua_State* L, fox_lua_handler* hnd, int env_table_index, int id, list<widget_initializer>*& init_ls)
+{
+  typedef list<widget_initializer> init_cell;
+
+  lua_getfield(L, -1, "init");
+  if (lua_isfunction(L, -1)) {
+    int env_index = hnd->get_handler_slot();
+    lua_rawseti(L, env_table_index, env_index);
+    init_ls = new init_cell(widget_initializer(id, env_index), init_ls);
+  } else {
+    lua_pop(L, 1);
+  }
+}
+
+void window_build(lua_State* L, fox_lua_handler* hnd, FXTopWindow* win, int win_id, list<widget_initializer>*& init_ls)
 {
   /* position in the Lua stack of the environment table for the window */
   int env_table_index = lua_gettop(L) - 1;
@@ -105,7 +119,6 @@ void window_build(lua_State* L, fox_lua_handler* hnd, FXTopWindow* win, int win_
 	int hid = get_handlers(L, env_table_index, hnd, id);
 	FXObject* target = (hid >= 0 ? win : NULL);
 	FXButton* b = new FXButton(parent, text, NULL, target, hid);
-
 	elem = new gui_window(b);
 	break;
       }
@@ -192,9 +205,24 @@ void window_build(lua_State* L, fox_lua_handler* hnd, FXTopWindow* win, int win_
 	elem = new gui_window(b);
 	break;
       }
+    case gui::combo_box:
+      {
+	lua_getfield(L, -1, "args");
+	int ncols = get_int_element(L, 1);
+	int opts = get_int_element(L, 2);
+	lua_pop(L, 1);
+
+	int hid = get_handlers(L, env_table_index, hnd, id);
+	FXObject* target = (hid >= 0 ? win : NULL);
+	FXComboBox* b = new FXComboBox(parent, ncols, target, hid, opts);
+	elem = new combo_box(b);
+	break;
+      }
     default:
       luaL_error(L, "unknown type_id code: %i", type_id);
     }
+
+    parse_init_function(L, hnd, env_table_index, id, init_ls);
 
     hnd->bind(id, elem);
 

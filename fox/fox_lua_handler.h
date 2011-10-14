@@ -82,6 +82,7 @@ public:
 
   bool lookup_name(const char *name, int& id) { return m_symbols.search(name, id); }
 
+  int get_handler_slot() { return (++ m_env_handler_index); }
   int assign_handler(FX::FXuint sel);
 
   void set_lua_state(lua_State* L, int thread_id = -1) { 

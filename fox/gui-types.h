@@ -20,6 +20,7 @@ namespace gui {
     dialog_box,
     radio_button,
     check_button,
+    combo_box,
   };
 
   enum method_e {
@@ -32,6 +33,8 @@ namespace gui {
     check,
     uncheck,
     set_unknown,
+    append_item,
+    set_nb_visible,
   };
 
 }

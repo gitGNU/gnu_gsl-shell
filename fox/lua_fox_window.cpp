@@ -63,6 +63,28 @@ lua_fox_window::~lua_fox_window()
   }
 }
 
+static void exec_initializers(lua_State* L, int index, list<widget_initializer>* init_ls)
+{
+  INDEX_SET_ABS(L, index);
+
+  lua_getfenv(L, index);
+
+  list<widget_initializer>* n;
+  for (list<widget_initializer>* p = init_ls; p; p = n) {
+    n = p->next();
+
+    widget_initializer& wi = p->content();
+    lua_rawgeti(L, -1, wi.fenv_func_index);
+    lua_pushvalue(L, index);
+    lua_pushinteger(L, wi.widget_id);
+    lua_call(L, 2, 0);
+    
+    delete p;
+  }
+
+  lua_pop(L, 1);
+}
+
 int fox_window_new(lua_State* L)
 {
   int type_id = get_int_field(L, "type_id");
@@ -89,12 +111,16 @@ int fox_window_new(lua_State* L)
     lua_getfield(L, -3, "body");
 
     FXApp* app = new FXApp("GSL Shell", "Francesco Abbate");
-    fox_window* win = new fox_window(L, app, lwin->lua_handler(), title, id, opts, width, height);
+
+    list<widget_initializer>* init_ls = 0;
+    fox_window* win = new fox_window(L, app, lwin->lua_handler(), title, id, opts, width, height, init_ls);
 
     lwin->init(win);
 
     lua_pop(L, 1);
     lua_setfenv(L, -2);
+
+    exec_initializers(L, -1, init_ls);
 
     return 1;
   }
@@ -131,7 +157,8 @@ int fox_window_dialog_create(lua_State* L)
     lua_newtable(L);
     lua_getfield(L, -3, "body");
 
-    fox_dialog* win = new fox_dialog(L, lmainwin->app(), lwin->lua_handler(), title, id, opts, width, height);
+    list<widget_initializer>* init_ls = 0;
+    fox_dialog* win = new fox_dialog(L, lmainwin->app(), lwin->lua_handler(), title, id, opts, width, height, init_ls);
 
     lwin->init(win);
 
@@ -141,6 +168,8 @@ int fox_window_dialog_create(lua_State* L)
     lua_rawseti(L, -2, FOX_MAIN_WINDOW_INDEX);
 
     lua_setfenv(L, -2);
+
+    exec_initializers(L, -1, init_ls);
 
     return 1;
   }
@@ -362,17 +391,17 @@ lua_fox_window::protected_call(lua_State* L,
 			       int (lua_fox_window::*method)(lua_State*, err&))
 {
   bool is_fox_thread = (L == lua_handler()->lua_state());
-  err status;
   int retval = 0;
+  err st;
 
   if (!is_fox_thread) {
     app()->mutex().lock();
   }
 
-  if (this->status == lua_fox_window::running) {
-    retval = (this->*method)(L, status);
+  if (status == running || status == not_started) {
+    retval = (this->*method)(L, st);
   } else {
-    status.error("window is not running", "window method");
+    st.error("window is not running", "window method");
   }
 
   if (!is_fox_thread) {
@@ -380,8 +409,8 @@ lua_fox_window::protected_call(lua_State* L,
     app()->mutex().unlock();
   }
 
-  if (status.error_msg())
-    return luaL_error(L, "error %s in %s.", status.error_msg(), status.context());
+  if (st.error_msg())
+    return luaL_error(L, "error %s in %s.", st.error_msg(), st.context());
 
   return retval;
 }

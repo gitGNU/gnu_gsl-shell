@@ -164,6 +164,15 @@ ctors = UI.MainWindow {
 		  },
 
 	 rbutton[1], rbutton[2], rbutton[3],
+
+	 UI.ComboBox { columns = 16, 
+		       layout = {'FILL_X'},
+		       onCreate = function(w, id) 
+				     w:handle(id, OP.SET_NB_VISIBLE, 4)
+				     for k=1, 4 do
+					w:handle(id, OP.APPEND_ITEM, "Item " .. k)
+				     end
+				  end,  },
 	 
 	 UI.CheckButton { text = 'Check this' },
       }
