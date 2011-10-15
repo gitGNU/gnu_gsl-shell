@@ -1,5 +1,4 @@
 #include "fox_lua_handler.h"
-#include "gsl-shell.h"
 #include "window_registry.h"
 
 long fox_lua_handler::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr)
@@ -13,7 +12,7 @@ long fox_lua_handler::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr)
       m_current_event = (FXEvent*) ptr;
     }
 
-    m_interp_lock->lock();
+    interp_lock();
 
     lua_State* L = m_L;
     // here we assume that we always have a lua_fox_window object
@@ -34,7 +33,7 @@ long fox_lua_handler::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr)
 
     close_handler_call();
 
-    m_interp_lock->unlock();
+    interp_unlock();
       
     return (err == 0 ? 1 : 0);
   }

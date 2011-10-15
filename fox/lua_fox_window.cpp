@@ -194,7 +194,10 @@ static int fox_window_run_modal(lua_State* L)
   win->create();
   win->show(PLACEMENT_CURSOR);
   app->refresh();
+
+  lwin->lua_handler()->interp_unlock();
   app->runModalFor(win);
+  lwin->lua_handler()->interp_lock();
 
   return 0;
 }
@@ -218,9 +221,11 @@ int fox_window_execute(lua_State* L)
     return luaL_error(L, "invalid dialog window");
   }
 
+  fox_lua_handler* lua_handler = lwin->lua_handler();
+
   lua_State* new_L = lua_newthread(L);
 
-  lwin->lua_handler()->set_lua_state(new_L);
+  lua_handler->set_lua_state(new_L);
 
   lua_pushvalue(L, 1);
   lua_xmove(L, new_L, 1);
@@ -282,20 +287,6 @@ int fox_window_free(lua_State* L)
   return 0;
 }
 
-void thread_interp_locker::lock()
-{
-  if (m_nest == 0)
-    GSL_SHELL_LOCK();
-  m_nest ++;
-}
-
-void thread_interp_locker::unlock()
-{
-  m_nest --;
-  if (m_nest == 0)
-    GSL_SHELL_UNLOCK();
-}
-
 static void *
 fox_window_thread_function (void *_inf)
 {
@@ -322,9 +313,9 @@ fox_window_thread_function (void *_inf)
   app->create();
   app->run();
 
-  GSL_SHELL_LOCK();
+  lua_handler->interp_lock();
   window_index_remove (L, lua_handler->lua_thread_id());
-  GSL_SHELL_UNLOCK();
+  lua_handler->interp_unlock();
 
   lwin->status = lua_fox_window::closed;
   delete app;

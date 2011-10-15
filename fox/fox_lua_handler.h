@@ -8,6 +8,7 @@
 #include "defs.h"
 #include "dict.h"
 #include "gui_element.h"
+#include "gsl-shell.h"
 
 __BEGIN_DECLS
 
@@ -21,8 +22,17 @@ class thread_interp_locker {
 public:
   thread_interp_locker() : m_nest(0) {}
 
-  void lock();
-  void unlock();
+  void lock() {
+    if (m_nest == 0)
+      GSL_SHELL_LOCK();
+    m_nest ++;
+  }
+
+  void unlock() {
+    m_nest --;
+    if (m_nest == 0)
+      GSL_SHELL_UNLOCK();
+  }
 
 private:
   int m_nest;
@@ -100,6 +110,9 @@ public:
 
   thread_interp_locker* locker() { return m_interp_lock; }
   void set_locker(thread_interp_locker* locker) { m_interp_lock = locker; }
+
+  void interp_lock()   const { m_interp_lock->lock();   }
+  void interp_unlock() const { m_interp_lock->unlock(); }
 
 private:
   void inherit(const fox_lua_handler* parent) {
