@@ -183,29 +183,6 @@ int fox_window_dialog_create(lua_State* L)
   return luaL_error (L, "invalid contructor type_id: %d", type_id);
 }
 
-static int fox_window_run_modal(lua_State* L)
-{
-  int window_index = lua_tointeger(L, 2);
-  lua_rawgeti(L, 1, window_index);
-  lua_fox_window* lwin = (lua_fox_window *) lua_touserdata(L, -1);
-  lua_pop(L, 2);
-  
-  FXTopWindow* win = lwin->window();
-  FXApp* app = lwin->app();
-
-  lwin->status = lua_fox_window::running;
-
-  win->create();
-  win->show(PLACEMENT_CURSOR);
-  app->refresh();
-
-  lwin->lua_handler()->interp_unlock();
-  app->runModalFor(win);
-  lwin->lua_handler()->interp_lock();
-
-  return 0;
-}
-
 int fox_window_execute(lua_State* L)
 {
   lua_fox_window* lwin = object_check<lua_fox_window>(L, 1, GS_FOX_WINDOW);
@@ -213,26 +190,36 @@ int fox_window_execute(lua_State* L)
   if (!lwin->is_dialog() || lwin->status != lua_fox_window::not_started) {
     return luaL_error(L, "invalid dialog window");
   }
-
+ 
   fox_lua_handler* lua_handler = lwin->lua_handler();
+  FXTopWindow* win = lwin->window();
+  FXApp* app = lwin->app();
 
   lua_getfenv(L, 1);
-  lua_pushcfunction(L, fox_window_run_modal);
-  lua_rawgeti(L, -2, FOX_WINDOWS_TABLE_INDEX);
+  lua_rawgeti(L, -1, FOX_WINDOWS_TABLE_INDEX);
+  lua_insert(L, 1);
+  lua_settop(L, 2);
 
-  const int window_index = lua_objlen(L, -1) + 1;
+  const int window_index = lua_objlen(L, 1) + 1;
   lua_handler->set_lua_state(L, window_index);
 
-  lua_pushvalue(L, 1);
-  lua_rawseti(L, -2, window_index);
+  lua_rawseti(L, 1, window_index);
 
-  lua_pushinteger(L, window_index);
-  lua_call(L, 2, 0);
+  lwin->status = lua_fox_window::running;
 
-  lua_rawgeti(L, -1, FOX_WINDOWS_TABLE_INDEX);
+  win->create();
+  win->show(PLACEMENT_CURSOR);
+  app->refresh();
+
+  lua_handler->interp_unlock();
+  app->runModalFor(win);
+  lua_handler->interp_lock();
+
+  lua_rawgeti(L, 1, window_index);
+  lua_getfenv(L, -1);
+
   lua_pushnil(L);
-  lua_rawseti(L, -2, window_index);
-  lua_pop(L, 1);
+  lua_rawseti(L, 1, window_index);
 
   lua_rawgeti(L, -1, FOX_RET_VALUES_INDEX);
   int n = lua_tointeger(L, -1);
