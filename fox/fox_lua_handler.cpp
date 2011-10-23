@@ -15,19 +15,19 @@ long fox_lua_handler::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr)
     interp_lock();
 
     lua_State* L = m_L;
-    // here we assume that we always have a lua_fox_window object
+    // here we assume that we always have a table with lua_fox_window objects
     // at the bottom of Lua stack at index position 1
-    lua_getfenv(L, 1);
+    lua_rawgeti(L, 1, m_window_index);
+    lua_getfenv(L, -1);
     lua_rawgeti(L, -1, env_index);
-    lua_pushvalue(L, 1);
+    lua_insert(L, -3);
+    lua_pop(L, 1);
 
     int err = lua_pcall(L, 1, 0, 0);
 
     if (err != 0) {
       const char* msg = lua_tostring(L, -1);
       fprintf(stderr, "error in callback function: %s", msg);
-      lua_pop(L, 2);
-    } else {
       lua_pop(L, 1);
     }
 

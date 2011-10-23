@@ -42,7 +42,7 @@ class fox_lua_handler {
   typedef std::auto_ptr<FXObject> auto_obj;
 public:
   fox_lua_handler(FXuint id_last) : 
-    m_L(0), m_thread_id(-1),
+  m_L(0), m_thread_id(-1), m_window_index(-1),
     m_env_handler_index(0), m_current_event(0), m_current_dc(0),
     m_resources(0), m_nb_retval(0), m_id_last(id_last), m_interp_lock(0)
   { }
@@ -95,8 +95,9 @@ public:
   int get_handler_slot() { return (++ m_env_handler_index); }
   int assign_handler(FX::FXuint sel);
 
-  void set_lua_state(lua_State* L, int thread_id = -1) { 
+  void set_lua_state(lua_State* L, int window_index, int thread_id = -1) { 
     m_L = L;
+    m_window_index = window_index;
     m_thread_id = thread_id;
   }
 
@@ -126,6 +127,7 @@ private:
 
   lua_State* m_L;
   int m_thread_id;
+  int m_window_index;
 
   dict<FX::FXuint, int> m_sel_map;
   int m_env_handler_index;
