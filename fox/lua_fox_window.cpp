@@ -225,6 +225,10 @@ int fox_window_execute(lua_State* L)
   int n = lua_tointeger(L, -1);
   lua_pop(L, 1);
 
+  if (!lua_checkstack(L, n)) {
+    return luaL_error(L, "too much yield arguments");
+  }
+
   for (int k = 1; k <= n; k++) {
     lua_rawgeti(L, -k, FOX_RET_VALUES_INDEX + k);
   }
