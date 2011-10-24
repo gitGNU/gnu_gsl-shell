@@ -6,6 +6,7 @@ local DECOR   = require 'fox-decor'
 local FRAME   = require 'fox-frame'
 local SEL     = require 'fox-selector'
 local OPTIONS = require 'fox-options'
+local OP      = require 'fox-method'
 
 local create = gsl.fox_window
 
@@ -194,6 +195,33 @@ function M.RadioButton(spec)
    local ctor = base_ctor(GUI.RADIO_BUTTON, spec)
    ctor.args = { spec.text or "<Unspecified>" }
    return { ctor }
+end
+
+function M.RadioButtonSet(labels)
+   local id = {}
+   local choice
+   local set = function(k) return function(w) choice = k end end
+   local upd = function(k)
+		  return function(w)
+			    local msg = (choice == k and OP.CHECK or OP.UNCHECK)
+			    w:handle(id[k], msg)
+			 end
+	       end
+
+   local ctls = {}
+
+   for i, text in ipairs(labels) do
+      local spec = {
+	 text = text,
+	 onCommand = set(i),
+	 onUpdate  = upd(i),
+      }
+      local ctor = M.RadioButton(spec)[1]
+      id[i] = ctor.id
+      ctls[#ctls+1] = ctor
+   end
+
+   return ctls
 end
 
 function M.CheckButton(spec)
