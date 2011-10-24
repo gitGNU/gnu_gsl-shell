@@ -152,16 +152,18 @@ function M.TextField(spec)
    return { ctor }
 end
 
-function M.Label(spec)
-   local ctor = base_ctor(GUI.LABEL, spec)
+local function generic_text_ctor(type_id, spec)
+   local ctor = base_ctor(type_id, spec)
    ctor.args = { spec.text or '<Unspecified>' }
-   return { ctor }
+   return ctor
+end
+
+function M.Label(spec)
+   return { generic_text_ctor(GUI.LABEL, spec) }
 end
 
 function M.Button(spec)
-   local ctor = base_ctor(GUI.BUTTON, spec)
-   ctor.args = { spec.text or "<Unspecified>" }
-   return { ctor }
+   return { generic_text_ctor(GUI.BUTTON, spec) }
 end
 
 function M.Canvas(spec)
@@ -192,9 +194,7 @@ function M.MenuTitle(spec)
 end
 
 function M.RadioButton(spec)
-   local ctor = base_ctor(GUI.RADIO_BUTTON, spec)
-   ctor.args = { spec.text or "<Unspecified>" }
-   return { ctor }
+   return { generic_text_ctor(GUI.RADIO_BUTTON, spec) }
 end
 
 function M.RadioButtonSet(labels)
@@ -216,7 +216,7 @@ function M.RadioButtonSet(labels)
 	 onCommand = set(i),
 	 onUpdate  = upd(i),
       }
-      local ctor = M.RadioButton(spec)[1]
+      local ctor = generic_text_ctor(GUI.RADIO_BUTTON, spec)
       id[i] = ctor.id
       ctls[#ctls+1] = ctor
    end
@@ -225,15 +225,11 @@ function M.RadioButtonSet(labels)
 end
 
 function M.CheckButton(spec)
-   local ctor = base_ctor(GUI.CHECK_BUTTON, spec)
-   ctor.args = { spec.text or "<Unspecified>" }
-   return { ctor }
+   return { generic_text_ctor(GUI.CHECK_BUTTON, spec) }
 end
 
 function M.ComboBox(spec)
-   local ctor = base_ctor(GUI.COMBO_BOX, spec)
-   ctor.args = { spec.text or "<Unspecified>" }
-   return { ctor }
+   return { generic_text_ctor(GUI.COMBO_BOX, spec) }
 end
 
 function M.MenuBar(spec)
