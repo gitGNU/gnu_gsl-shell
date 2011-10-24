@@ -29,7 +29,12 @@ public:
 
   void init(FXTopWindow* win) { m_window = win; }
 
-  FXApp*           app()         { return m_window->getApp(); }
+  FXApp* app() {
+    if (m_window)
+      return m_window->getApp();
+    return 0;
+  }
+
   FXTopWindow*     window()      { return m_window; }
   fox_lua_handler* lua_handler() { return &m_handler; }
 

@@ -217,7 +217,7 @@ void window_build(lua_State* L, fox_lua_handler* hnd, FXTopWindow* win, int win_
 	break;
       }
     default:
-      luaL_error(L, "unknown type_id code: %i", type_id);
+      luaL_error(L, "unknown type_id code: %d", type_id);
     }
 
     parse_init_function(L, hnd, env_table_index, id, init_ls);
