@@ -556,5 +556,6 @@ fox_window_register (lua_State *L)
   luaL_register (L, NULL, fox_window_methods);
   lua_pop (L, 1);
 
-  luaL_register (L, NULL, fox_window_functions);
+  luaL_register (L, "fox", fox_window_functions);
+  lua_pop(L, 1);
 }

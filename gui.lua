@@ -8,7 +8,7 @@ local SEL     = require 'fox-selector'
 local OPTIONS = require 'fox-options'
 local OP      = require 'fox-method'
 
-local create = gsl.fox_window
+local create = fox.fox_window
 
 local M = {}
 
