@@ -24,10 +24,8 @@
 #include "lua-gsl.h"
 #include "gs-types.h"
 #include "lua-utils.h"
-#include "random.h"
+#include "lua-rng.h"
 #include "randist.h"
-#include "pdf.h"
-#include "cdf.h"
 #include "sf.h"
 
 #include "lua-graph.h"
@@ -38,38 +36,29 @@ extern void fox_window_register (lua_State *L);
 static int gsl_shell_lua_registry (lua_State *L);
 #endif
 
-static const struct luaL_Reg gsl_shell_functions[] = {
 #ifdef GSL_SHELL_DEBUG
+static const struct luaL_Reg gsl_shell_functions[] = {
   {"registry", gsl_shell_lua_registry},
+  {NULL, NULL}
+};
 #endif
-  {NULL, NULL}
-};
-
-static const struct luaL_Reg matrix_functions[] = {
-  {NULL, NULL}
-};
 
 int
 luaopen_gsl (lua_State *L)
 {
   gsl_set_error_handler_off ();
 
-  luaopen_graph (L);
+  luaL_register (L, "gslsh", gs_type_functions);
+#ifdef GSL_SHELL_DEBUG
+  luaL_register (L, NULL, gsl_shell_functions);
+#endif
   lua_pop (L, 1);
 
-  luaL_register (L, MLUA_GSLLIBNAME, gsl_shell_functions);
-
-  luaL_register (L, NULL, gs_type_functions);
-
-  random_register (L);
+  register_graph (L);
+  rng_register (L);
   randist_register (L);
-  pdf_register (L);
-  cdf_register (L);
   sf_register (L);
-
   fox_window_register (L);
-
-  lua_pop (L, 1);
 
   return 1;
 }

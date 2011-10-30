@@ -66,9 +66,11 @@ number generators, you do not need to know the details of what
 comprises the state, and besides that varies from algorithm to
 algorithm.
 
-So, if you want to generate random numbers the first step is to use the :func:`rng` function,
+.. module:: rng
 
-.. function:: rng([name])
+So, if you want to generate random numbers the first step is to use the :func:`rng.new` function,
+
+.. function:: new([name])
    
    This function returns a "random number generator" object of the
    specified type ``name``. If you do not specify a particular
@@ -76,7 +78,7 @@ So, if you want to generate random numbers the first step is to use the :func:`r
    paragraph on :ref:`algorithms <rng-algorithms>` for a description
    of the different algorithms available.
 
-.. class:: rng
+.. class:: Rng
 
    .. method:: get()
 
@@ -95,7 +97,7 @@ So, if you want to generate random numbers the first step is to use the :func:`r
    
      This method set the seed of the generator to the given integer value.
 
-.. function:: rng_list()
+.. function:: list()
 
      Return an array with all the list of all the supported generator type.
 
@@ -104,7 +106,7 @@ Examples
 
 So here a simple example that prints 20 integer numbers between 0 and 999::
 
-   r = rng() -- we create a random number generator
+   r = rng.new() -- we create a random number generator
    for k=1,20 do
       local n = r:getint(1000) -- we obtain a random integer < 1000 
       print(n)
@@ -112,7 +114,7 @@ So here a simple example that prints 20 integer numbers between 0 and 999::
 
 and here another example that creates a 5x5 matrix and initiliaze it with random numbers like before::
 
-   r = rng() -- we create a random number generator
+   r = rng.new() -- we create a random number generator
    m = new(5, 5, |i,j| r:getint(1000)) -- create the matrix
 
 .. _rng-algorithms:

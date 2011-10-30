@@ -1,6 +1,6 @@
 
 use 'math'
-use 'gsl'
+use 'num'
 use 'graph'
 
 local function demo1()
@@ -12,7 +12,7 @@ local function demo1()
    local x = matrix.new(n, 1, xsmp)
    local y = matrix.new(n, 1, |i| f(xsmp(i)))
 
-   local r = rng()
+   local r = rng.new()
    local w = matrix.alloc(n, 1)
    for i = 1, n do 
       local yi = y[i]

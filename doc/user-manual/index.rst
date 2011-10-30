@@ -1,5 +1,3 @@
-.. _gsl-shell-manual-index:
-
 ##################################
 Welcome to GSL shell documentation
 ##################################
@@ -17,6 +15,8 @@ advanced functionalities like closures and metamethods. Lua is very
 easy to learn and will give you the power of defining your own complex routines
 to use the GSL library more effectively.
 
+`GSL Shell main page <http://www.nongnu.org/gsl-shell/>`_.
+
 Contents:
 
 .. toctree::
@@ -30,7 +30,6 @@ Contents:
    random.rst
    randist.rst
    pdf.rst
-   cdf.rst
    linfit.rst
    nlinfit.rst
    bsplines.rst
@@ -43,4 +42,4 @@ Contents:
    contour.rst
    csv.rst
    examples.rst
-   direct-matrix.rst
+   gsl-ffi.rst

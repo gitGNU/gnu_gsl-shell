@@ -1,7 +1,9 @@
 
 local template = require 'template'
 
-function gsl.ode(spec)
+num = {}
+
+function num.ode(spec)
    local required = {N= 'number', eps_abs= 'number'}
    local defaults = {eps_rel = 0, a_y = 1, a_dydt = 0}
    local is_known = {rkf45= true, rk8pd= true}
@@ -19,7 +21,7 @@ function gsl.ode(spec)
    if not is_known[method] then error('unknown ode method: ' .. method) end
    spec.method = nil
 
-   local ode = template.load(string.format('num/%s.lua.in', method), spec)
+   local ode = template.load(method, spec)
 
    local mt = {
       __index = {evolve = ode.evolve, init = ode.init}
@@ -38,7 +40,7 @@ local NLINFIT = {
 	     end
 }
 
-function gsl.nlinfit(spec)
+function num.nlinfit(spec)
    if not spec.n then error 'number of points "n" not specified' end
    if not spec.p then error 'number of parameters "p" not specified' end
 
@@ -47,7 +49,7 @@ function gsl.nlinfit(spec)
    end
 
    local n, p = spec.n, spec.p
-   local s = { lm = template.load('num/lmfit.lua.in', {N= n, P= p}) }
+   local s = { lm = template.load('lmfit', {N= n, P= p}) }
 
    s.set     = function(ss, fdf, x0) return ss.lm.set(fdf, x0) end
    s.iterate = function(ss) return ss.lm.iterate() end
@@ -57,3 +59,5 @@ function gsl.nlinfit(spec)
 
    return s
 end
+
+return num

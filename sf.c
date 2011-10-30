@@ -85,5 +85,6 @@ static const struct luaL_Reg sf_functions[] = {
 void
 sf_register (lua_State *L)
 {
-  luaL_register (L, NULL, sf_functions);
+  luaL_register (L, "sf", sf_functions);
+  lua_pop(L, 1);
 }

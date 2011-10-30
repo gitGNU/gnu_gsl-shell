@@ -760,11 +760,6 @@ int gsl_linalg_hesstri_decomp(gsl_matrix * A, gsl_matrix * B,
                               gsl_matrix * U, gsl_matrix * V,
                               gsl_vector * work);
 
-/* Singular Value Decomposition
-
- * exceptions: 
- */
-
 int
 gsl_linalg_SV_decomp (gsl_matrix * A,
                       gsl_matrix * V,
@@ -788,10 +783,6 @@ gsl_linalg_SV_solve (const gsl_matrix * U,
                      const gsl_vector * S,
                      const gsl_vector * b,
                      gsl_vector * x);
-
-
-/* LU Decomposition, Gaussian elimination with partial pivoting
- */
 
 int gsl_linalg_LU_decomp (gsl_matrix * A, gsl_permutation * p, int *signum);
 
@@ -1053,12 +1044,6 @@ int gsl_linalg_cholesky_svx (const gsl_matrix * cholesky,
 
 int gsl_linalg_cholesky_invert(gsl_matrix * cholesky);
 
-/* Cholesky decomposition with unit-diagonal triangular parts.
- *   A = L D L^T, where diag(L) = (1,1,...,1).
- *   Upon exit, A contains L and L^T as for Cholesky, and
- *   the diagonal of A is (1,1,...,1). The vector Dis set
- *   to the diagonal elements of the diagonal matrix D.
- */
 int gsl_linalg_cholesky_decomp_unit(gsl_matrix * A, gsl_vector * D);
 
 
@@ -1102,39 +1087,14 @@ int gsl_linalg_hermtd_unpack_T (const gsl_matrix_complex * A,
                                 gsl_vector * diag, 
                                 gsl_vector * subdiag);
 
-/* Linear Solve Using Householder Transformations
-
- * exceptions: 
- */
-
 int gsl_linalg_HH_solve (gsl_matrix * A, const gsl_vector * b, gsl_vector * x);
 int gsl_linalg_HH_svx (gsl_matrix * A, gsl_vector * x);
 
-/* Linear solve for a symmetric tridiagonal system.
-
- * The input vectors represent the NxN matrix as follows:
- *
- *     diag[0]  offdiag[0]             0    ...
- *  offdiag[0]     diag[1]    offdiag[1]    ...
- *           0  offdiag[1]       diag[2]    ...
- *           0           0    offdiag[2]    ...
- *         ...         ...           ...    ...
- */
 int gsl_linalg_solve_symm_tridiag (const gsl_vector * diag,
                                    const gsl_vector * offdiag,
                                    const gsl_vector * b,
                                    gsl_vector * x);
 
-/* Linear solve for a nonsymmetric tridiagonal system.
-
- * The input vectors represent the NxN matrix as follows:
- *
- *       diag[0]  abovediag[0]              0    ...
- *  belowdiag[0]       diag[1]   abovediag[1]    ...
- *             0  belowdiag[1]        diag[2]    ...
- *             0             0   belowdiag[2]    ...
- *           ...           ...            ...    ...
- */
 int gsl_linalg_solve_tridiag (const gsl_vector * diag,
                                    const gsl_vector * abovediag,
                                    const gsl_vector * belowdiag,
@@ -1142,33 +1102,11 @@ int gsl_linalg_solve_tridiag (const gsl_vector * diag,
                                    gsl_vector * x);
 
 
-/* Linear solve for a symmetric cyclic tridiagonal system.
-
- * The input vectors represent the NxN matrix as follows:
- *
- *      diag[0]  offdiag[0]             0   .....  offdiag[N-1]
- *   offdiag[0]     diag[1]    offdiag[1]   .....
- *            0  offdiag[1]       diag[2]   .....
- *            0           0    offdiag[2]   .....
- *          ...         ...
- * offdiag[N-1]         ...
- */
 int gsl_linalg_solve_symm_cyc_tridiag (const gsl_vector * diag,
                                        const gsl_vector * offdiag,
                                        const gsl_vector * b,
                                        gsl_vector * x);
 
-/* Linear solve for a nonsymmetric cyclic tridiagonal system.
-
- * The input vectors represent the NxN matrix as follows:
- *
- *        diag[0]  abovediag[0]             0   .....  belowdiag[N-1]
- *   belowdiag[0]       diag[1]  abovediag[1]   .....
- *              0  belowdiag[1]       diag[2]
- *              0             0  belowdiag[2]   .....
- *            ...           ...
- * abovediag[N-1]           ...
- */
 int gsl_linalg_solve_cyc_tridiag (const gsl_vector * diag,
                                   const gsl_vector * abovediag,
                                   const gsl_vector * belowdiag,
@@ -1204,11 +1142,6 @@ int gsl_linalg_bidiag_unpack_B (const gsl_matrix * A,
 int gsl_linalg_balance_matrix (gsl_matrix * A, gsl_vector * D);
 int gsl_linalg_balance_accum (gsl_matrix * A, gsl_vector * D);
 int gsl_linalg_balance_columns (gsl_matrix * A, gsl_vector * D);
-
-/* ========================================================================
- * Level 1
- * ========================================================================
- */
 
 enum CBLAS_ORDER {CblasRowMajor=101, CblasColMajor=102};
 enum CBLAS_TRANSPOSE {CblasNoTrans=111, CblasTrans=112, CblasConjTrans=113};
@@ -1284,16 +1217,6 @@ void gsl_blas_dscal  (double alpha, gsl_vector * X);
 void gsl_blas_zscal  (const gsl_complex alpha, gsl_vector_complex * X);
 void gsl_blas_zdscal (double alpha, gsl_vector_complex * X);
 
-
-/* ===========================================================================
- * Level 2
- * ===========================================================================
- */
-
-/*
- * Routines with standard 4 prefixes (S, D, C, Z)
- */
-
 int  gsl_blas_dgemv (CBLAS_TRANSPOSE_t TransA,
                      double alpha,
                      const gsl_matrix * A,
@@ -1328,10 +1251,6 @@ int  gsl_blas_ztrsv (CBLAS_UPLO_t Uplo,
                      const gsl_matrix_complex * A,
                      gsl_vector_complex *X);
 
-/*
- * Routines with S and D prefixes only
- */
-
 int  gsl_blas_dsymv (CBLAS_UPLO_t Uplo,
                      double alpha,
                      const gsl_matrix * A,
@@ -1353,10 +1272,6 @@ int  gsl_blas_dsyr2 (CBLAS_UPLO_t Uplo,
                      const gsl_vector * X,
                      const gsl_vector * Y,
                      gsl_matrix * A);
-
-/*
- * Routines with C and Z prefixes only
- */
 
 
 int  gsl_blas_zhemv (CBLAS_UPLO_t Uplo,
@@ -1386,16 +1301,6 @@ int  gsl_blas_zher2 (CBLAS_UPLO_t Uplo,
                      const gsl_vector_complex * X,
                      const gsl_vector_complex * Y,
                      gsl_matrix_complex * A);
-
-/*
- * ===========================================================================
- * Prototypes for level 3 BLAS
- * ===========================================================================
- */
-
-/*
- * Routines with standard 4 prefixes (S, D, C, Z)
- */
 
 int  gsl_blas_dgemm (CBLAS_TRANSPOSE_t TransA,
                      CBLAS_TRANSPOSE_t TransB,
@@ -1487,10 +1392,6 @@ int  gsl_blas_ztrsm (CBLAS_SIDE_t Side,
                      const gsl_complex alpha,
                      const gsl_matrix_complex * A,
                      gsl_matrix_complex * B);
-
-/*
- * Routines with prefixes C and Z only
- */
 
 int  gsl_blas_zhemm (CBLAS_SIDE_t Side,
                      CBLAS_UPLO_t Uplo,
@@ -1620,8 +1521,249 @@ ffi.cdef[[
 			    gsl_matrix * cov,
 			    double * chisq,
 			    gsl_multifit_linear_workspace * work);
+
+struct _gsl_rng;
+typedef struct _gsl_rng gsl_rng;
+
+unsigned int gsl_ran_bernoulli (const gsl_rng * r, double p);
+double gsl_ran_bernoulli_pdf (const unsigned int k, double p);
+
+double gsl_ran_beta (const gsl_rng * r, const double a, const double b);
+double gsl_ran_beta_pdf (const double x, const double a, const double b);
+
+unsigned int gsl_ran_binomial (const gsl_rng * r, double p, unsigned int n);
+unsigned int gsl_ran_binomial_knuth (const gsl_rng * r, double p, unsigned int n);
+unsigned int gsl_ran_binomial_tpe (const gsl_rng * r, double p, unsigned int n);
+double gsl_ran_binomial_pdf (const unsigned int k, const double p, const unsigned int n);
+
+double gsl_ran_exponential (const gsl_rng * r, const double mu);
+double gsl_ran_exponential_pdf (const double x, const double mu);
+
+double gsl_ran_exppow (const gsl_rng * r, const double a, const double b);
+double gsl_ran_exppow_pdf (const double x, const double a, const double b);
+
+double gsl_ran_cauchy (const gsl_rng * r, const double a);
+double gsl_ran_cauchy_pdf (const double x, const double a);
+
+double gsl_ran_chisq (const gsl_rng * r, const double nu);
+double gsl_ran_chisq_pdf (const double x, const double nu);
+
+double gsl_ran_erlang (const gsl_rng * r, const double a, const double n);
+double gsl_ran_erlang_pdf (const double x, const double a, const double n);
+
+double gsl_ran_fdist (const gsl_rng * r, const double nu1, const double nu2);
+double gsl_ran_fdist_pdf (const double x, const double nu1, const double nu2);
+
+double gsl_ran_flat (const gsl_rng * r, const double a, const double b);
+double gsl_ran_flat_pdf (double x, const double a, const double b);
+
+double gsl_ran_gamma (const gsl_rng * r, const double a, const double b);
+double gsl_ran_gamma_int (const gsl_rng * r, const unsigned int a);
+double gsl_ran_gamma_pdf (const double x, const double a, const double b);
+double gsl_ran_gamma_mt (const gsl_rng * r, const double a, const double b);
+double gsl_ran_gamma_knuth (const gsl_rng * r, const double a, const double b);
+
+double gsl_ran_gaussian (const gsl_rng * r, const double sigma);
+double gsl_ran_gaussian_ratio_method (const gsl_rng * r, const double sigma);
+double gsl_ran_gaussian_ziggurat (const gsl_rng * r, const double sigma);
+double gsl_ran_gaussian_pdf (const double x, const double sigma);
+
+double gsl_ran_ugaussian (const gsl_rng * r);
+double gsl_ran_ugaussian_ratio_method (const gsl_rng * r);
+double gsl_ran_ugaussian_pdf (const double x);
+
+double gsl_ran_gaussian_tail (const gsl_rng * r, const double a, const double sigma);
+double gsl_ran_gaussian_tail_pdf (const double x, const double a, const double sigma);
+
+double gsl_ran_ugaussian_tail (const gsl_rng * r, const double a);
+double gsl_ran_ugaussian_tail_pdf (const double x, const double a);
+
+void gsl_ran_bivariate_gaussian (const gsl_rng * r, double sigma_x, double sigma_y, double rho, double *x, double *y);
+double gsl_ran_bivariate_gaussian_pdf (const double x, const double y, const double sigma_x, const double sigma_y, const double rho);
+
+double gsl_ran_landau (const gsl_rng * r);
+double gsl_ran_landau_pdf (const double x);
+
+unsigned int gsl_ran_geometric (const gsl_rng * r, const double p);
+double gsl_ran_geometric_pdf (const unsigned int k, const double p);
+
+unsigned int gsl_ran_hypergeometric (const gsl_rng * r, unsigned int n1, unsigned int n2, unsigned int t);
+double gsl_ran_hypergeometric_pdf (const unsigned int k, const unsigned int n1, const unsigned int n2, unsigned int t);
+
+double gsl_ran_gumbel1 (const gsl_rng * r, const double a, const double b);
+double gsl_ran_gumbel1_pdf (const double x, const double a, const double b);
+
+double gsl_ran_gumbel2 (const gsl_rng * r, const double a, const double b);
+double gsl_ran_gumbel2_pdf (const double x, const double a, const double b);
+
+double gsl_ran_logistic (const gsl_rng * r, const double a);
+double gsl_ran_logistic_pdf (const double x, const double a);
+
+double gsl_ran_lognormal (const gsl_rng * r, const double zeta, const double sigma);
+double gsl_ran_lognormal_pdf (const double x, const double zeta, const double sigma);
+
+unsigned int gsl_ran_logarithmic (const gsl_rng * r, const double p);
+double gsl_ran_logarithmic_pdf (const unsigned int k, const double p);
+
+unsigned int gsl_ran_pascal (const gsl_rng * r, double p, unsigned int n);
+double gsl_ran_pascal_pdf (const unsigned int k, const double p, unsigned int n);
+
+double gsl_ran_pareto (const gsl_rng * r, double a, const double b);
+double gsl_ran_pareto_pdf (const double x, const double a, const double b);
+
+unsigned int gsl_ran_poisson (const gsl_rng * r, double mu);
+double gsl_ran_poisson_pdf (const unsigned int k, const double mu);
+
+double gsl_ran_rayleigh (const gsl_rng * r, const double sigma);
+double gsl_ran_rayleigh_pdf (const double x, const double sigma);
+
+double gsl_ran_rayleigh_tail (const gsl_rng * r, const double a, const double sigma);
+double gsl_ran_rayleigh_tail_pdf (const double x, const double a, const double sigma);
+
+double gsl_ran_tdist (const gsl_rng * r, const double nu);
+double gsl_ran_tdist_pdf (const double x, const double nu);
+
+double gsl_ran_laplace (const gsl_rng * r, const double a);
+double gsl_ran_laplace_pdf (const double x, const double a);
+
+double gsl_ran_levy (const gsl_rng * r, const double c, const double alpha);
+double gsl_ran_levy_skew (const gsl_rng * r, const double c, const double alpha, const double beta);
+
+double gsl_ran_weibull (const gsl_rng * r, const double a, const double b);
+double gsl_ran_weibull_pdf (const double x, const double a, const double b);
+
+double gsl_cdf_ugaussian_P (const double x);
+double gsl_cdf_ugaussian_Q (const double x);
+
+double gsl_cdf_ugaussian_Pinv (const double P);
+double gsl_cdf_ugaussian_Qinv (const double Q);
+
+double gsl_cdf_gaussian_P (const double x, const double sigma);
+double gsl_cdf_gaussian_Q (const double x, const double sigma);
+
+double gsl_cdf_gaussian_Pinv (const double P, const double sigma);
+double gsl_cdf_gaussian_Qinv (const double Q, const double sigma);
+
+double gsl_cdf_gamma_P (const double x, const double a, const double b);
+double gsl_cdf_gamma_Q (const double x, const double a, const double b);
+
+double gsl_cdf_gamma_Pinv (const double P, const double a, const double b);
+double gsl_cdf_gamma_Qinv (const double Q, const double a, const double b);
+
+double gsl_cdf_cauchy_P (const double x, const double a);
+double gsl_cdf_cauchy_Q (const double x, const double a);
+
+double gsl_cdf_cauchy_Pinv (const double P, const double a);
+double gsl_cdf_cauchy_Qinv (const double Q, const double a);
+
+double gsl_cdf_laplace_P (const double x, const double a);
+double gsl_cdf_laplace_Q (const double x, const double a);
+
+double gsl_cdf_laplace_Pinv (const double P, const double a);
+double gsl_cdf_laplace_Qinv (const double Q, const double a);
+
+double gsl_cdf_rayleigh_P (const double x, const double sigma);
+double gsl_cdf_rayleigh_Q (const double x, const double sigma);
+
+double gsl_cdf_rayleigh_Pinv (const double P, const double sigma);
+double gsl_cdf_rayleigh_Qinv (const double Q, const double sigma);
+
+double gsl_cdf_chisq_P (const double x, const double nu);
+double gsl_cdf_chisq_Q (const double x, const double nu);
+
+double gsl_cdf_chisq_Pinv (const double P, const double nu);
+double gsl_cdf_chisq_Qinv (const double Q, const double nu);
+
+double gsl_cdf_exponential_P (const double x, const double mu);
+double gsl_cdf_exponential_Q (const double x, const double mu);
+
+double gsl_cdf_exponential_Pinv (const double P, const double mu);
+double gsl_cdf_exponential_Qinv (const double Q, const double mu);
+
+double gsl_cdf_exppow_P (const double x, const double a, const double b);
+double gsl_cdf_exppow_Q (const double x, const double a, const double b);
+
+double gsl_cdf_tdist_P (const double x, const double nu);
+double gsl_cdf_tdist_Q (const double x, const double nu);
+
+double gsl_cdf_tdist_Pinv (const double P, const double nu);
+double gsl_cdf_tdist_Qinv (const double Q, const double nu);
+
+double gsl_cdf_fdist_P (const double x, const double nu1, const double nu2);
+double gsl_cdf_fdist_Q (const double x, const double nu1, const double nu2);
+
+double gsl_cdf_fdist_Pinv (const double P, const double nu1, const double nu2);
+double gsl_cdf_fdist_Qinv (const double Q, const double nu1, const double nu2);
+
+double gsl_cdf_beta_P (const double x, const double a, const double b);
+double gsl_cdf_beta_Q (const double x, const double a, const double b);
+
+double gsl_cdf_beta_Pinv (const double P, const double a, const double b);
+double gsl_cdf_beta_Qinv (const double Q, const double a, const double b);
+
+double gsl_cdf_flat_P (const double x, const double a, const double b);
+double gsl_cdf_flat_Q (const double x, const double a, const double b);
+
+double gsl_cdf_flat_Pinv (const double P, const double a, const double b);
+double gsl_cdf_flat_Qinv (const double Q, const double a, const double b);
+
+double gsl_cdf_lognormal_P (const double x, const double zeta, const double sigma);
+double gsl_cdf_lognormal_Q (const double x, const double zeta, const double sigma);
+
+double gsl_cdf_lognormal_Pinv (const double P, const double zeta, const double sigma);
+double gsl_cdf_lognormal_Qinv (const double Q, const double zeta, const double sigma);
+
+double gsl_cdf_gumbel1_P (const double x, const double a, const double b);
+double gsl_cdf_gumbel1_Q (const double x, const double a, const double b);
+
+double gsl_cdf_gumbel1_Pinv (const double P, const double a, const double b);
+double gsl_cdf_gumbel1_Qinv (const double Q, const double a, const double b);
+
+double gsl_cdf_gumbel2_P (const double x, const double a, const double b);
+double gsl_cdf_gumbel2_Q (const double x, const double a, const double b);
+
+double gsl_cdf_gumbel2_Pinv (const double P, const double a, const double b);
+double gsl_cdf_gumbel2_Qinv (const double Q, const double a, const double b);
+
+double gsl_cdf_weibull_P (const double x, const double a, const double b);
+double gsl_cdf_weibull_Q (const double x, const double a, const double b);
+
+double gsl_cdf_weibull_Pinv (const double P, const double a, const double b);
+double gsl_cdf_weibull_Qinv (const double Q, const double a, const double b);
+
+double gsl_cdf_pareto_P (const double x, const double a, const double b);
+double gsl_cdf_pareto_Q (const double x, const double a, const double b);
+
+double gsl_cdf_pareto_Pinv (const double P, const double a, const double b);
+double gsl_cdf_pareto_Qinv (const double Q, const double a, const double b);
+
+double gsl_cdf_logistic_P (const double x, const double a);
+double gsl_cdf_logistic_Q (const double x, const double a);
+
+double gsl_cdf_logistic_Pinv (const double P, const double a);
+double gsl_cdf_logistic_Qinv (const double Q, const double a);
+
+double gsl_cdf_binomial_P (const unsigned int k, const double p, const unsigned int n);
+double gsl_cdf_binomial_Q (const unsigned int k, const double p, const unsigned int n);
+
+double gsl_cdf_poisson_P (const unsigned int k, const double mu);
+double gsl_cdf_poisson_Q (const unsigned int k, const double mu);
+
+double gsl_cdf_geometric_P (const unsigned int k, const double p);
+double gsl_cdf_geometric_Q (const unsigned int k, const double p);
+
+double gsl_cdf_negative_binomial_P (const unsigned int k, const double p, const double n);
+double gsl_cdf_negative_binomial_Q (const unsigned int k, const double p, const double n);
+
+double gsl_cdf_pascal_P (const unsigned int k, const double p, const unsigned int n);
+double gsl_cdf_pascal_Q (const unsigned int k, const double p, const unsigned int n);
+
+double gsl_cdf_hypergeometric_P (const unsigned int k, const unsigned int n1,
+                                 const unsigned int n2, const unsigned int t);
+double gsl_cdf_hypergeometric_Q (const unsigned int k, const unsigned int n1,
+                                 const unsigned int n2, const unsigned int t);
 ]]
 
-local cgsl = (jit.os == 'Linux' and ffi.C or ffi.load('libgsl-0'))
+local gsl = (jit.os == 'Linux' and ffi.C or ffi.load('libgsl-0'))
 
-return cgsl
+return gsl

@@ -19,7 +19,7 @@
 
 use 'math'
 use 'graph'
-use 'gsl'
+use 'num'
 
 local function demo1()
    local n, ncut = 8*3*5, 16
@@ -56,7 +56,7 @@ local function demo2()
 
    ft = fft(sq, true)
 
-   pf:add(ibars(isample(|k| complex.abs(ft[k]), 0, n/2)), 'black')
+   pf:add(ibars(iter.isample(|k| complex.abs(ft[k]), 0, n/2)), 'black')
 
    for k=ncut, n - ncut do ft[k] = 0 end
    fftinv(ft, true)
@@ -71,10 +71,10 @@ end
 
 local function demo3()
    local n, ncut, order = 512, 11, 8
-   local x1 = besselJzero(order, 14)
+   local x1 = sf.besselJzero(order, 14)
    local xsmp = |k| x1*(k-1)/(n-1)
 
-   local bess = matrix.new(n, 1, |i| besselJ(order, xsmp(i)))
+   local bess = matrix.new(n, 1, |i| sf.besselJ(order, xsmp(i)))
 
    local p = plot('Original signal / reconstructed')
    p:addline(filine(|i| bess[i], n), 'black')
@@ -82,7 +82,7 @@ local function demo3()
    local ft = fft(bess)
 
    fftplot = plot('FFT power spectrum')
-   bars = ibars(isample(|k| complex.abs(ft[k]), 0, 60))
+   bars = ibars(iter.isample(|k| complex.abs(ft[k]), 0, 60))
    fftplot:add(bars, 'black')
    fftplot:show()
 

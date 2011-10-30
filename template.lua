@@ -76,7 +76,9 @@ local function read_file(filename)
    return content
 end
 
-local function process(filename, defs)
+local function process(name, defs)
+   local filename, errmsg = package.searchpath(name, package.path)
+   if not filename then error(errmsg) end
    local template = read_file(filename)
    local codegen = preprocess(template, 'template_gen', defs)
    local code = {}
@@ -93,13 +95,6 @@ local function template_error(code, filename, err)
    error('error loading ' .. filename .. ':' .. err)
 end
 
-local function require(filename)
-   local code = process(filename .. '.lua.in', {})
-   local f, err = loadstring(code, filename)
-   if not f then template_error(code, filename, err) end
-   return f()
-end
-
 local function load(filename, defs)
    local code = process(filename, defs)
    local f, err = loadstring(code, filename)
@@ -108,7 +103,7 @@ local function load(filename, defs)
 end
 
 M.process = process
-M.require = require
-M.load    = load
+M.load = load
 
 return M
+
