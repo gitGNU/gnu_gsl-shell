@@ -45,7 +45,7 @@ endif
 
 SUBDIRS = $(LUADIR)
 
-C_SRC_FILES = str.c gs-types.c lua-utils.c sf.c lua-graph.c lua-gsl.c
+C_SRC_FILES = str.c gs-types.c lua-utils.c sf.c lua-graph.c lua-gsl.c gsl_edit.c edit_functions.c
 
 ifeq ($(strip $(USE_READLINE)),yes)
   C_SRC_FILES += completion.c

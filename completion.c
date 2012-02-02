@@ -5,16 +5,20 @@
 #include <stdlib.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-#include <lua.h>
-
+#include <sys/wait.h>
+#include <unistd.h>
 #include "completion.h"
 #include "gsl-shell.h"
+#include "edit_functions.h"
 
+//lua_State *globalL = NULL;
 static char *my_generator (const char *text, int state);
+void bind_keys(); //will bind the keys to their appropiate functions
+int launch_editor(); //will launch the editor
 
 void initialize_readline()
 {
-
+  bind_keys();
   rl_completion_entry_function = my_generator;
   rl_basic_word_break_characters = " \t\n\"'~><=*+-/;,|[{(";
 }
@@ -136,3 +140,9 @@ char *my_generator (const char *text, int state)
   lua_pop (L, 1);
   return NULL;
 }
+
+void bind_keys()
+{
+    rl_bind_key(0x05,launch_editor); // ctrl+e will launch the editor
+}
+
