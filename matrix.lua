@@ -892,6 +892,29 @@ function matrix.solve(m, b)
    end
 end
 
+function matrix.cholesky(m, inplace)
+   local u = inplace and m or m:copy()
+   local n = matrix_dim(m)
+
+   if ffi.istype(gsl_matrix, m) then
+      gsl_check(gsl.gsl_linalg_cholesky_decomp(u))
+      for i = 0, n-1 do
+	 for j = 0, n-1 do
+	    if i < j then gsl.gsl_matrix_set(u, i, j, 0) end
+	 end
+      end
+      return u
+   else
+      gsl_check(gsl.gsl_linalg_complex_cholesky_decomp(u))
+      for i = 0, n-1 do
+	 for j = 0, n-1 do
+	    if i < j then gsl.gsl_matrix_complex_set(u, i, j, 0) end
+	 end
+      end
+      return u
+   end
+end
+
 local function matrix_sv_decomp(a, v, s, w)
    local sv = gsl.gsl_matrix_column(s, 0)
    local w
