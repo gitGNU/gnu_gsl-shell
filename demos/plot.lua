@@ -125,6 +125,7 @@ local function legend_demo()
    local p = graph.legend {
       {'sinus', 'red', 'line'},
       {'cosinus', 'blue', 'line', {{'dash', 7, 3}}},
+      {'exp', 'red', 'circle'},
    }
    p:show()
 
@@ -133,9 +134,11 @@ local function legend_demo()
 
    local mp = graph.fxplot(math.sin, 0, 2*pi, 'red', 32)
    mp:addline(graph.fxline(math.cos, 0, 2*pi, 32), 'blue', {{'dash', 7,3}})
+   mp:add(graph.fxline(|x| math.exp(-x), 0, 2*pi, 32), 'red', {{'marker', size=5, mark='circle'}})
    mp.title = 'Plot example'
    mp.xtitle = 'x axis title'
 
+   mp.clip = false
    mp:set_mini(p)
    mp:save_svg('demo.svg', 600, 400)
    p:save_svg('legend.svg', 400, 200)

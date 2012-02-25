@@ -280,14 +280,10 @@ function graph.plot_lines(ln, title)
 end
 
 local function legend_symbol(sym, dx, dy)
-   if sym == 'square' then
-      return graph.rect(5+dx, 5+dy, 15+dx, 15+dy)
-   elseif sym == 'circle' then
-      return graph.ellipse(10+dx, 10+dy, 5, 5)
-   elseif sym == 'line' then
+   if sym == 'line' then
       return graph.segment(2+dx, 10+dy, 18+dx, 10+dy), {'stroke'}
    else
-      error('invalid legend symbol: ' .. sym)
+      return graph.marker(10+dx, 10+dy, sym, 8)
    end
 end
 
